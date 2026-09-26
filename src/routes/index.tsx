@@ -6,10 +6,11 @@ import { LoginPage } from '../pages/Login/LoginPage'
 import { DashboardPage } from '../pages/Dashboard/DashboardPage'
 import { UsuariosPage } from '../pages/Configuracoes/UsuariosPage'
 import { AgendaPage } from '../pages/Agenda/AgendaPage'
-import { BandasPage } from '../pages/Bandas/BandasPage'
 import { EventosPage } from '../pages/Eventos/EventosPage'
+import { BandasPage } from '../pages/Bandas/BandasPage'
 import { MusicosPage } from '../pages/Musicos/MusicosPage'
 import { RepertorioPage } from '../pages/Repertorio/RepertorioPage'
+import { ContratosPage } from '../pages/Contratos/ContratosPage'
 import { ConfiguracoesPage } from '../pages/Configuracoes/ConfiguracoesPage'
 
 // Protected Route wrapper: requires user to be logged in
@@ -58,6 +59,7 @@ export function AppRoutes() {
         <Route path="/bandas" element={<BandasPage />} />
         <Route path="/musicos" element={<MusicosPage />} />
         <Route path="/repertorio" element={<RepertorioPage />} />
+        <Route path="/contratos" element={<ContratosPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/configuracoes" element={<ConfiguracoesPage />} />
       </Route>

@@ -32,15 +32,12 @@ export function LoginPage() {
     }
   }
 
-  // Helper buttons to quickly test login
-  const handleQuickFill = (type: 'admin' | 'musico') => {
+  // Helper button to quickly test login as Admin
+  const handleQuickFill = (type: 'admin') => {
     setError(null)
     if (type === 'admin') {
       setEmail('mauriciogoulart.deoliveira37@gmail.com')
       setPassword('admin123')
-    } else {
-      setEmail('musico@stageflow.com')
-      setPassword('musico123')
     }
   }
 
@@ -135,36 +132,20 @@ export function LoginPage() {
             <span>Preenchimento rápido para testes:</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="max-w-xs mx-auto">
             <button
               type="button"
               onClick={() => handleQuickFill('admin')}
-              className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-teal-500/50 hover:bg-teal-500/5 text-left transition-all text-xs group"
+              className="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-teal-500/50 hover:bg-teal-500/5 text-left transition-all text-xs group"
             >
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-slate-200 group-hover:text-teal-300">
-                  Mauricio (Admin)
+                  Entrar como Mauricio (Admin)
                 </span>
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 opacity-60 group-hover:opacity-100" />
               </div>
               <span className="text-[11px] text-slate-500 block truncate mt-0.5">
-                mauriciogoulart...
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickFill('musico')}
-              className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-indigo-500/50 hover:bg-indigo-500/5 text-left transition-all text-xs group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-200 group-hover:text-indigo-300">
-                  Músico (Lucas)
-                </span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 opacity-60 group-hover:opacity-100" />
-              </div>
-              <span className="text-[11px] text-slate-500 block truncate mt-0.5">
-                musico@stageflow.com
+                mauriciogoulart.deoliveira37@gmail.com
               </span>
             </button>
           </div>

@@ -2,8 +2,8 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { AuthContext } from './authContextInstance'
 import type { User, UserWithPassword, LoginCredentials, NewUserPayload } from '../types/auth'
 
-const STORAGE_USERS_KEY = 'stageflow_users_v1'
-const STORAGE_CURRENT_USER_KEY = 'stageflow_current_user_v1'
+const STORAGE_USERS_KEY = 'stageflow_users_v2'
+const STORAGE_CURRENT_USER_KEY = 'stageflow_current_user_v2'
 
 const DEFAULT_USERS: UserWithPassword[] = [
   {
@@ -13,28 +13,8 @@ const DEFAULT_USERS: UserWithPassword[] = [
     password: 'admin123',
     role: 'admin',
     phone: '(11) 99999-9999',
-    instrument: 'Direção Musical',
+    instrument: 'Direção Musical / Baixo',
     createdAt: '2026-09-01T10:00:00.000Z',
-  },
-  {
-    id: 'usr-lucas-musico',
-    name: 'Lucas Mendes',
-    email: 'musico@stageflow.com',
-    password: 'musico123',
-    role: 'musico',
-    phone: '(11) 98888-8888',
-    instrument: 'Guitarra Solo',
-    createdAt: '2026-09-05T14:30:00.000Z',
-  },
-  {
-    id: 'usr-roberta-produtora',
-    name: 'Roberta Martins',
-    email: 'producao@stageflow.com',
-    password: 'prod123',
-    role: 'produtor',
-    phone: '(11) 97777-7777',
-    instrument: 'Produção / Roadie',
-    createdAt: '2026-09-10T09:15:00.000Z',
   },
 ]
 

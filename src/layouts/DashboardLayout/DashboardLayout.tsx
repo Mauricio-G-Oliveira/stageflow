@@ -7,6 +7,7 @@ import {
   Users2,
   Mic2,
   Music2,
+  FileText,
   UserCheck,
   Settings,
   LogOut,
@@ -58,6 +59,11 @@ export function DashboardLayout() {
       to: '/repertorio',
       label: 'Repertório',
       icon: Music2,
+    },
+    {
+      to: '/contratos',
+      label: 'Contratos',
+      icon: FileText,
     },
     {
       to: '/usuarios',

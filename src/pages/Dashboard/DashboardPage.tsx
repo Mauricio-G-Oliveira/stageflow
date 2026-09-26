@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Calendar,
@@ -8,43 +9,41 @@ import {
   UserPlus,
   PlusCircle,
   MapPin,
+  FileText,
+  UserCheck,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import type { Evento } from '../../types/evento'
+import type { Musico } from '../../types/musico'
+import type { Contrato } from '../../types/contrato'
+import { eventoService } from '../../services/eventoService'
+import { musicoService } from '../../services/musicoService'
+import { repertorioService } from '../../services/repertorioService'
+import { contratoService } from '../../services/contratoService'
 import { Button } from '../../components/Button/Button'
 
 export function DashboardPage() {
-  const { user, users } = useAuth()
+  const { user } = useAuth()
+  const [eventos, setEventos] = useState<Evento[]>([])
+  const [musicos, setMusicos] = useState<Musico[]>([])
+  const [contratos, setContratos] = useState<Contrato[]>([])
+  const [totalMusicas, setTotalMusicas] = useState(0)
 
-  // Sample upcoming shows for mock dashboard
-  const upcomingEvents = [
-    {
-      id: 'evt-1',
-      title: 'Festival da Primavera 2026',
-      date: '28 Set, 21:00',
-      venue: 'Arena Show Bar - São Paulo, SP',
-      band: 'Banda Blackout',
-      cache: 'R$ 4.500',
-      status: 'Confirmado',
-    },
-    {
-      id: 'evt-2',
-      title: 'Casamento Mariana & Rodrigo',
-      date: '04 Out, 18:30',
-      venue: 'Espaço Jardim das Flores - Campinas, SP',
-      band: 'Acoustic Soul',
-      cache: 'R$ 6.200',
-      status: 'Contrato Assinado',
-    },
-    {
-      id: 'evt-3',
-      title: 'Noite do Rock & Blues',
-      date: '12 Out, 22:00',
-      venue: 'The Pub Station - Santos, SP',
-      band: 'Banda Blackout',
-      cache: 'R$ 3.800',
-      status: 'Em Negociação',
-    },
-  ]
+  useEffect(() => {
+    const load = async () => {
+      const evts = await eventoService.listarTodos()
+      const mus = await musicoService.listarTodos()
+      const songs = await repertorioService.listarTodas()
+      const ctrs = await contratoService.listarTodos()
+      setEventos(evts)
+      setMusicos(mus)
+      setTotalMusicas(songs.length)
+      setContratos(ctrs)
+    }
+    load()
+  }, [])
+
+  const faturamentoTotal = eventos.reduce((acc, curr) => acc + (curr.cacheTotal || 0), 0)
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -65,31 +64,29 @@ export function DashboardPage() {
               <strong className="text-white capitalize">
                 {user?.role === 'admin' ? 'Administrador do StageFlow' : user?.role}
               </strong>
-              . Aqui está o resumo das suas bandas, eventos e equipe.
+              . Aqui está o resumo das suas bandas, eventos e equipe de 5+ músicos.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {user?.role === 'admin' && (
-              <Link to="/usuarios">
-                <Button
-                  variant="secondary"
-                  size="md"
-                  leftIcon={<UserPlus className="w-4 h-4 text-teal-400" />}
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-md"
-                >
-                  Gerenciar Equipe ({users.length})
-                </Button>
-              </Link>
-            )}
-            <Link to="/eventos">
+            <Link to="/contratos">
+              <Button
+                variant="secondary"
+                size="md"
+                leftIcon={<FileText className="w-4 h-4 text-teal-400" />}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-md"
+              >
+                Emitir Contrato ({contratos.length})
+              </Button>
+            </Link>
+            <Link to="/agenda">
               <Button
                 variant="primary"
                 size="md"
                 leftIcon={<PlusCircle className="w-4 h-4" />}
                 className="bg-white text-[#0e6f5c] hover:bg-teal-50 font-bold shadow-lg"
               >
-                Novo Evento
+                Novo Show na Agenda
               </Button>
             </Link>
           </div>
@@ -100,50 +97,48 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Próximos Shows</span>
+            <span className="text-xs font-semibold text-slate-400">Shows & Eventos</span>
             <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center">
               <Calendar className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mt-3">3</p>
-          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-            <span className="text-teal-400 font-semibold">+1</span> agendado para o próximo mês
+          <p className="text-3xl font-bold text-white mt-3">{eventos.length}</p>
+          <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1 font-semibold">
+            R$ {faturamentoTotal.toLocaleString('pt-BR')} faturados
           </p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Membros na Equipe</span>
+            <span className="text-xs font-semibold text-slate-400">Integrantes da Banda</span>
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
               <Users2 className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mt-3">{users.length}</p>
-          <p className="text-xs text-slate-400 mt-1">
-            {users.filter((u) => u.role === 'musico').length} músicos cadastrados
-          </p>
+          <p className="text-3xl font-bold text-white mt-3">{musicos.length}</p>
+          <p className="text-xs text-slate-400 mt-1">Formação para 5+ músicos</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Músicas no Repertório</span>
+            <span className="text-xs font-semibold text-slate-400">Repertório Musical</span>
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
               <Music2 className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mt-3">48</p>
-          <p className="text-xs text-slate-400 mt-1">Divididas em 3 setlists ativos</p>
+          <p className="text-3xl font-bold text-white mt-3">{totalMusicas}</p>
+          <p className="text-xs text-slate-400 mt-1">Músicas com tom e arranjo</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Próximo Ensaio</span>
+            <span className="text-xs font-semibold text-slate-400">Contratos Emitidos</span>
             <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center">
-              <Clock className="w-5 h-5" />
+              <FileText className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xl font-bold text-white mt-3">Quinta, 19:30</p>
-          <p className="text-xs text-slate-400 mt-1">Estúdio Som & Arte • Sala A</p>
+          <p className="text-3xl font-bold text-white mt-3">{contratos.length}</p>
+          <p className="text-xs text-slate-400 mt-1">Prontos para PDF / assinatura</p>
         </div>
       </div>
 
@@ -154,10 +149,79 @@ export function DashboardPage() {
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
             <div>
               <h2 className="text-lg font-bold text-white">Próximos Eventos & Shows</h2>
-              <p className="text-xs text-slate-400">Acompanhe as datas e status dos contratos</p>
+              <p className="text-xs text-slate-400">Acompanhe horários de montagem, passagem de som e quem fechou</p>
             </div>
             <Link
-              to="/eventos"
+              to="/agenda"
+              className="text-xs font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1"
+            >
+              Abrir Agenda
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {eventos.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-8">Nenhum evento agendado.</p>
+            ) : (
+              eventos.map((event) => (
+                <div
+                  key={event.id}
+                  className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-teal-500/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-white">{event.titulo}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 capitalize">
+                        {event.tipoEvento.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                      <span className="flex items-center gap-1 text-slate-300 font-medium">
+                        <Clock className="w-3.5 h-3.5 text-teal-400" />
+                        {new Date(event.data + 'T00:00:00').toLocaleDateString('pt-BR')} • Show: {event.horarioInicioShow}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                        {event.localNome} ({event.cidade})
+                      </span>
+                    </div>
+                    <div className="pt-1 text-[11px] text-indigo-300 flex items-center gap-1">
+                      <UserCheck className="w-3.5 h-3.5" />
+                      Fechado por: <strong>{event.fechadoPor?.nome}</strong>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-emerald-400 block">
+                        R$ {event.cacheTotal.toLocaleString('pt-BR')}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        R$ {event.cachePorMusico}/músico
+                      </span>
+                    </div>
+                    <Link to="/contratos">
+                      <Button variant="outline" size="sm" className="text-xs py-1 px-2.5">
+                        Contrato
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Band Members Quick List */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-white">Músicos da Banda</h2>
+              <p className="text-xs text-slate-400">Formação 5+ integrantes</p>
+            </div>
+            <Link
+              to="/musicos"
               className="text-xs font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1"
             >
               Ver todos
@@ -166,62 +230,8 @@ export function DashboardPage() {
           </div>
 
           <div className="space-y-3">
-            {upcomingEvents.map((event) => (
-              <div
-                key={event.id}
-                className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-teal-500/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-white">{event.title}</span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20">
-                      {event.band}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                    <span className="flex items-center gap-1 text-slate-300 font-medium">
-                      <Clock className="w-3.5 h-3.5 text-teal-400" />
-                      {event.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-500" />
-                      {event.venue}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
-                  <span className="text-xs font-bold text-emerald-400">{event.cache}</span>
-                  <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
-                    {event.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Column: Team Members Quick List */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-            <div>
-              <h2 className="text-lg font-bold text-white">Membros da Equipe</h2>
-              <p className="text-xs text-slate-400">Integrantes com acesso ao sistema</p>
-            </div>
-            {user?.role === 'admin' && (
-              <Link
-                to="/usuarios"
-                className="text-xs font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1"
-              >
-                Gerenciar
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </Link>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            {users.slice(0, 5).map((u) => {
-              const initials = u.name
+            {musicos.slice(0, 5).map((u) => {
+              const initials = u.nome
                 .split(' ')
                 .map((n) => n[0])
                 .slice(0, 2)
@@ -238,32 +248,28 @@ export function DashboardPage() {
                       {initials}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-white">{u.name}</p>
-                      <p className="text-[11px] text-slate-400">
-                        {u.instrument || (u.role === 'admin' ? 'Administrador' : 'Equipe')}
-                      </p>
+                      <p className="text-xs font-semibold text-white">{u.nome}</p>
+                      <p className="text-[11px] text-teal-400">{u.instrumentoPrincipal}</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                    {u.role}
+                    {u.tipoVinculo}
                   </span>
                 </div>
               )
             })}
           </div>
 
-          {user?.role === 'admin' && (
-            <Link to="/usuarios" className="block pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                fullWidth
-                leftIcon={<UserPlus className="w-3.5 h-3.5" />}
-              >
-                Adicionar Novo Usuário
-              </Button>
-            </Link>
-          )}
+          <Link to="/musicos" className="block pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              fullWidth
+              leftIcon={<UserPlus className="w-3.5 h-3.5" />}
+            >
+              Cadastrar Mais Integrantes
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
