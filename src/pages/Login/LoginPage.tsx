@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/Button/Button'
 import { Input } from '../../components/Input/Input'
@@ -32,15 +32,6 @@ export function LoginPage() {
     }
   }
 
-  // Helper button to quickly test login as Admin
-  const handleQuickFill = (type: 'admin') => {
-    setError(null)
-    if (type === 'admin') {
-      setEmail('mauriciogoulart.deoliveira37@gmail.com')
-      setPassword('admin123')
-    }
-  }
-
   return (
     <div className="w-full space-y-6">
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
@@ -49,7 +40,7 @@ export function LoginPage() {
             Bem-vindo de volta!
           </h2>
           <p className="text-xs sm:text-sm text-slate-400">
-            Acesse para gerenciar eventos, equipe e repertório
+            Acesse para gerenciar eventos, equipe, locações e repertório
           </p>
         </div>
 
@@ -124,32 +115,6 @@ export function LoginPage() {
             Entrar no StageFlow
           </Button>
         </form>
-
-        {/* Quick Test Login Helpers */}
-        <div className="mt-8 pt-6 border-t border-slate-800/80">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-3 font-medium">
-            <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-            <span>Preenchimento rápido para testes:</span>
-          </div>
-
-          <div className="max-w-xs mx-auto">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin')}
-              className="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-teal-500/50 hover:bg-teal-500/5 text-left transition-all text-xs group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-200 group-hover:text-teal-300">
-                  Entrar como Mauricio (Admin)
-                </span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 opacity-60 group-hover:opacity-100" />
-              </div>
-              <span className="text-[11px] text-slate-500 block truncate mt-0.5">
-                mauriciogoulart.deoliveira37@gmail.com
-              </span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   )
