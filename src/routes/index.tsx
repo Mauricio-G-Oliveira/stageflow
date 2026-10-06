@@ -11,6 +11,7 @@ import { BandasPage } from '../pages/Bandas/BandasPage'
 import { MusicosPage } from '../pages/Musicos/MusicosPage'
 import { RepertorioPage } from '../pages/Repertorio/RepertorioPage'
 import { ContratosPage } from '../pages/Contratos/ContratosPage'
+import { LocadoraPage } from '../pages/Locadora/LocadoraPage'
 import { ConfiguracoesPage } from '../pages/Configuracoes/ConfiguracoesPage'
 
 // Protected Route wrapper: requires user to be logged in
@@ -60,6 +61,7 @@ export function AppRoutes() {
         <Route path="/musicos" element={<MusicosPage />} />
         <Route path="/repertorio" element={<RepertorioPage />} />
         <Route path="/contratos" element={<ContratosPage />} />
+        <Route path="/locadora" element={<LocadoraPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/configuracoes" element={<ConfiguracoesPage />} />
       </Route>

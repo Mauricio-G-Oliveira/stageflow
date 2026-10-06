@@ -1,13 +1,16 @@
 import { BrowserRouter } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { AppRoutes } from './routes'
 
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

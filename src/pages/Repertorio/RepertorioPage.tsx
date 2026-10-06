@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent, type ChangeEvent, useRef } from 'react'
 import {
   Music2,
   Plus,
@@ -8,9 +8,15 @@ import {
   CheckCircle2,
   X,
   FileMusic,
+  Upload,
+  FileText,
+  Eye,
+  FileCheck,
 } from 'lucide-react'
-import type { Musica, NovaMusicaPayload } from '../../types/repertorio'
+import type { Musica, NovaMusicaPayload, DocumentoAnexo } from '../../types/repertorio'
 import { repertorioService } from '../../services/repertorioService'
+import { parseDocxToText } from '../../utils/documentParser'
+import { VisualizadorDocumento } from './VisualizadorDocumento'
 import { Button } from '../../components/Button/Button'
 import { Input } from '../../components/Input/Input'
 
@@ -21,6 +27,18 @@ export function RepertorioPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
 
+  // Document Viewer State
+  const [viewingDoc, setViewingDoc] = useState<{
+    titulo: string
+    artista?: string
+    tipo: 'pdf' | 'docx' | 'txt'
+    pdfUrl?: string
+    textoConteudo?: string
+  } | null>(null)
+
+  // Direct File Reader Trigger
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // Form State
   const [titulo, setTitulo] = useState('')
   const [artista, setArtista] = useState('')
@@ -29,6 +47,7 @@ export function RepertorioPage() {
   const [duracao, setDuracao] = useState('3:30')
   const [linkCifra, setLinkCifra] = useState('')
   const [observacoes, setObservacoes] = useState('')
+  const [documentoAnexo, setDocumentoAnexo] = useState<DocumentoAnexo | null>(null)
 
   const loadData = async () => {
     const list = await repertorioService.listarTodas()
@@ -38,6 +57,56 @@ export function RepertorioPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  // File processing (PDF, Word DOCX, TXT)
+  const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>, isDirectPreview = false) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const extension = file.name.split('.').pop()?.toLowerCase() || ''
+    const isPdf = extension === 'pdf'
+    const isDocx = extension === 'docx' || extension === 'doc'
+    const isTxt = extension === 'txt' || extension === 'cifra'
+
+    if (!isPdf && !isDocx && !isTxt) {
+      alert('Formato não suportado. Por favor, envie um arquivo PDF, Word (.docx) ou Texto (.txt).')
+      return
+    }
+
+    let tipo: 'pdf' | 'docx' | 'txt' = isPdf ? 'pdf' : isDocx ? 'docx' : 'txt'
+    let pdfUrl: string | undefined = undefined
+    let textoConteudo: string | undefined = undefined
+
+    if (isPdf) {
+      pdfUrl = URL.createObjectURL(file)
+    } else if (isDocx) {
+      textoConteudo = await parseDocxToText(file)
+    } else {
+      textoConteudo = await file.text()
+    }
+
+    if (isDirectPreview) {
+      // Abre direto no visualizador de palco
+      setViewingDoc({
+        titulo: file.name.replace(/\.[^/.]+$/, ''),
+        artista: 'Importação Rápida',
+        tipo,
+        pdfUrl,
+        textoConteudo,
+      })
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    // Salva no anexo da nova música sendo criada
+    setDocumentoAnexo({
+      nome: file.name,
+      tipo,
+      url: pdfUrl,
+      conteudoTexto: textoConteudo,
+      dataUpload: new Date().toISOString(),
+    })
+  }
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault()
@@ -55,6 +124,7 @@ export function RepertorioPage() {
       duracao: duracao.trim() || undefined,
       linkCifra: linkCifra.trim() || undefined,
       observacoes: observacoes.trim() || undefined,
+      documento: documentoAnexo || undefined,
       ativa: true,
     }
 
@@ -72,6 +142,7 @@ export function RepertorioPage() {
     setDuracao('3:30')
     setLinkCifra('')
     setObservacoes('')
+    setDocumentoAnexo(null)
   }
 
   const handleDelete = async (id: string, tit: string) => {
@@ -80,6 +151,26 @@ export function RepertorioPage() {
       await loadData()
       setNotification(`Música "${tit}" removida.`)
       setTimeout(() => setNotification(null), 3000)
+    }
+  }
+
+  const handleOpenSongDoc = (musica: Musica) => {
+    if (musica.documento) {
+      setViewingDoc({
+        titulo: musica.titulo,
+        artista: musica.artista,
+        tipo: musica.documento.tipo,
+        pdfUrl: musica.documento.url,
+        textoConteudo: musica.documento.conteudoTexto,
+      })
+    } else {
+      // Se não tiver anexo salvo mas tem link de cifra, abre o leitor com template
+      setViewingDoc({
+        titulo: musica.titulo,
+        artista: musica.artista,
+        tipo: 'txt',
+        textoConteudo: `[${musica.titulo} - ${musica.artista}]\nTom Original: ${musica.tom}\nGênero: ${musica.genero}\n\nObservações Técnicas:\n${musica.observacoes || 'Sem observações.'}\n\n(Dica: você pode anexar um arquivo PDF ou Word nesta música clicando em Editar)`,
+      })
     }
   }
 
@@ -98,21 +189,40 @@ export function RepertorioPage() {
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input for fast doc preview */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => handleFileSelected(e, true)}
+        accept=".pdf,.docx,.doc,.txt"
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
             <Music2 className="w-6 h-6 text-[#0e6f5c]" />
-            Repertório & Setlists
+            Repertório, Partituras & Cifras
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Organize músicas da banda, tons musicais, cifras e arranjos para shows de casamentos e festas.
+            Organize músicas da banda com leitor integrado de PDF e Word (.docx) com rolagem para palco.
           </p>
         </div>
 
-        <Button variant="primary" onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
-          Nova Música
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            leftIcon={<Upload className="w-4 h-4 text-teal-400" />}
+          >
+            Leitor Rápido (PDF/Word)
+          </Button>
+
+          <Button variant="primary" onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
+            Nova Música
+          </Button>
+        </div>
       </div>
 
       {notification && (
@@ -169,7 +279,7 @@ export function RepertorioPage() {
                 <th className="px-6 py-4 text-center">Tom</th>
                 <th className="px-6 py-4">Gênero / Estilo</th>
                 <th className="px-6 py-4">Duração</th>
-                <th className="px-6 py-4">Observações</th>
+                <th className="px-6 py-4">Partitura / Cifra</th>
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
@@ -211,8 +321,27 @@ export function RepertorioPage() {
                       {song.duracao || '—'}
                     </td>
 
-                    <td className="px-6 py-4 text-xs text-slate-400 max-w-xs truncate">
-                      {song.observacoes || '—'}
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleOpenSongDoc(song)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                          song.documento
+                            ? 'bg-teal-500/10 border-teal-500/30 text-teal-300 hover:bg-teal-500/20'
+                            : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {song.documento ? (
+                          <>
+                            <FileCheck className="w-3.5 h-3.5 text-teal-400" />
+                            <span>{song.documento.tipo.toUpperCase()} Anexo</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Ver Modo Palco</span>
+                          </>
+                        )}
+                      </button>
                     </td>
 
                     <td className="px-6 py-4 text-right">
@@ -223,7 +352,7 @@ export function RepertorioPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 rounded"
-                            title="Abrir Cifra / Letra"
+                            title="Abrir Link Externo CifraClub"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -245,10 +374,10 @@ export function RepertorioPage() {
         </div>
       </div>
 
-      {/* Modal Nova Música */}
+      {/* Modal Nova Música com Anexo PDF/Word */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Music2 className="w-4 h-4 text-teal-400" />
@@ -298,8 +427,40 @@ export function RepertorioPage() {
                 />
               </div>
 
+              {/* Upload de PDF ou Word (.docx) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-200 mb-1">
+                  Importar Arquivo de Partitura / Cifra (PDF ou Word)
+                </label>
+                <div className="border border-dashed border-slate-700 rounded-xl p-3 bg-slate-950/60 hover:border-teal-500/50 transition-colors flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-teal-400 shrink-0">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="truncate text-left">
+                      <p className="text-xs text-white truncate font-medium">
+                        {documentoAnexo ? documentoAnexo.nome : 'Selecione um arquivo .pdf ou .docx'}
+                      </p>
+                      <span className="text-[10px] text-slate-400">
+                        {documentoAnexo ? `Tipo: ${documentoAnexo.tipo.toUpperCase()}` : 'Aparece direto no leitor de palco'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <label className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 font-semibold cursor-pointer shrink-0 transition-colors">
+                    <span>{documentoAnexo ? 'Alterar' : 'Procurar'}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.doc,.txt"
+                      onChange={(e) => handleFileSelected(e, false)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
               <Input
-                label="Link da Cifra / Partitura"
+                label="Link da Cifra / Partitura Online"
                 placeholder="https://www.cifraclub.com.br/..."
                 value={linkCifra}
                 onChange={(e) => setLinkCifra(e.target.value)}
@@ -323,6 +484,18 @@ export function RepertorioPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Visualizador de Documento / Modo Palco */}
+      {viewingDoc && (
+        <VisualizadorDocumento
+          titulo={viewingDoc.titulo}
+          artista={viewingDoc.artista}
+          arquivoTipo={viewingDoc.tipo}
+          pdfUrl={viewingDoc.pdfUrl}
+          textoConteudo={viewingDoc.textoConteudo}
+          onClose={() => setViewingDoc(null)}
+        />
       )}
     </div>
   )

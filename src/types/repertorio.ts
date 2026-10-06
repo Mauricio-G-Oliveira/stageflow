@@ -1,3 +1,11 @@
+export interface DocumentoAnexo {
+  nome: string
+  tipo: 'pdf' | 'docx' | 'txt'
+  url?: string
+  conteudoTexto?: string
+  dataUpload: string
+}
+
 export interface Musica {
   id: string
   titulo: string
@@ -8,6 +16,7 @@ export interface Musica {
   linkCifra?: string
   linkAudio?: string
   observacoes?: string
+  documento?: DocumentoAnexo
   ativa: boolean
   createdAt: string
 }
