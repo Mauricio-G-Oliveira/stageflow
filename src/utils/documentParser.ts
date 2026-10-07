@@ -1,89 +1,89 @@
 /**
- * Utilitário para processamento de arquivos de partituras e cifras (.docx, .txt, .pdf)
- * Executado 100% no navegador do cliente sem dependências de servidor.
+ * Utilitário profissional para processamento de arquivos de partituras e letras/cifras (.docx, .txt, .pdf)
+ * Executado 100% no navegador do cliente com descompactação OpenXML nativa via JSZip.
  */
+import JSZip from 'jszip'
 
 export async function parseDocxToText(file: File): Promise<string> {
   try {
     const arrayBuffer = await file.arrayBuffer()
-    const bytes = new Uint8Array(arrayBuffer)
+    const zip = await JSZip.loadAsync(arrayBuffer)
+    const docXmlFile = zip.file('word/document.xml')
 
-    // Procura por local file headers no formato ZIP (PK\x03\x04)
-    let offset = 0
-    while (offset < bytes.length - 30) {
-      if (
-        bytes[offset] === 0x50 &&
-        bytes[offset + 1] === 0x4b &&
-        bytes[offset + 2] === 0x03 &&
-        bytes[offset + 3] === 0x04
-      ) {
-        const compressionMethod = bytes[offset + 8] | (bytes[offset + 9] << 8)
-        const compressedSize =
-          bytes[offset + 18] |
-          (bytes[offset + 19] << 8) |
-          (bytes[offset + 20] << 16) |
-          (bytes[offset + 21] << 24)
-        const fileNameLength = bytes[offset + 26] | (bytes[offset + 27] << 8)
-        const extraFieldLength = bytes[offset + 28] | (bytes[offset + 29] << 8)
-
-        const fileNameBytes = bytes.slice(offset + 30, offset + 30 + fileNameLength)
-        const fileName = new TextDecoder().decode(fileNameBytes)
-
-        const dataStart = offset + 30 + fileNameLength + extraFieldLength
-
-        if (fileName === 'word/document.xml' && compressedSize > 0) {
-          const compressedData = bytes.slice(dataStart, dataStart + compressedSize)
-
-          if (compressionMethod === 8 && typeof DecompressionStream !== 'undefined') {
-            try {
-              const ds = new DecompressionStream('deflate-raw')
-              const writer = ds.writable.getWriter()
-              writer.write(compressedData)
-              writer.close()
-              const decompressedResponse = await new Response(ds.readable).arrayBuffer()
-              const xmlContent = new TextDecoder().decode(decompressedResponse)
-              return extractTextFromWordXml(xmlContent)
-            } catch (err) {
-              console.warn('DecompressionStream error, usando fallback:', err)
-            }
-          }
-        }
-
-        offset = dataStart + compressedSize
-      } else {
-        offset++
-      }
+    if (!docXmlFile) {
+      throw new Error('Arquivo word/document.xml não encontrado no pacote .docx')
     }
 
-    // Fallback: busca por tags de texto <w:t> no arquivo bruto se não foi possível inflar
-    const rawText = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
-    return extractTextFromWordXml(rawText)
+    const xmlString = await docXmlFile.async('text')
+    const extracted = extractFormattedTextFromWordXml(xmlString)
+
+    if (!extracted || extracted.trim().length === 0) {
+      return 'O documento Word foi importado, mas não continha texto legível.'
+    }
+
+    return extracted
   } catch (error) {
-    console.error('Erro ao ler DOCX:', error)
-    return 'Não foi possível extrair o texto automaticamente do arquivo Word.'
+    console.error('Erro ao ler DOCX com JSZip:', error)
+    return `Não foi possível extrair o texto automaticamente: ${error instanceof Error ? error.message : 'formato incompatível'}`
   }
 }
 
-function extractTextFromWordXml(xml: string): string {
-  // Converte quebras de parágrafo do Word em novas linhas
-  const withParagraphs = xml
+function extractFormattedTextFromWordXml(xmlString: string): string {
+  try {
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(xmlString, 'application/xml')
+
+    // Procura por todos os elementos de parágrafo do Word
+    const paragraphs = xmlDoc.getElementsByTagName('w:p')
+    const lines: string[] = []
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const p = paragraphs[i]
+      let pText = ''
+
+      // Processa cada nó filho em ordem para manter espaçamento e quebras
+      const allElements = p.getElementsByTagName('*')
+      for (let j = 0; j < allElements.length; j++) {
+        const el = allElements[j]
+        const nodeName = el.nodeName.toLowerCase()
+
+        if (nodeName === 'w:t' || nodeName.endsWith(':t')) {
+          pText += el.textContent || ''
+        } else if (nodeName === 'w:tab' || nodeName.endsWith(':tab')) {
+          pText += '    '
+        } else if (nodeName === 'w:br' || nodeName.endsWith(':br')) {
+          pText += '\n'
+        }
+      }
+
+      lines.push(pText)
+    }
+
+    const fullText = lines.join('\n').trim()
+    if (fullText.length > 0) {
+      return fullText
+    }
+  } catch (err) {
+    console.warn('Falha no DOMParser, usando regex fallback estruturado:', err)
+  }
+
+  // Fallback robusto via regex caso o DOMParser falhe no navegador
+  return xmlString
     .replace(/<\/w:p>/g, '\n')
     .replace(/<w:br[^>]*\/>/g, '\n')
-    .replace(/<w:tab[^>]*\/>/g, '\t')
-
-  // Extrai o conteúdo entre as tags de texto <w:t>
-  const matches = withParagraphs.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
-  if (matches && matches.length > 0) {
-    const textPieces = matches.map((tag) => tag.replace(/<[^>]+>/g, ''))
-    return textPieces.join('').trim()
-  }
-
-  // Se for texto plano ou HTML genérico
-  const stripped = withParagraphs.replace(/<[^>]+>/g, '').trim()
-  return stripped.replace(/\n{3,}/g, '\n\n')
+    .replace(/<w:tab[^>]*\/>/g, '    ')
+    .replace(/<w:t[^>]*>(.*?)<\/w:t>/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
-// Dicionário de notas e acordes musicais para transposição
+// Dicionário de notas e acordes musicais para transposição em palco
 const NOTAS_NATURAIS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const NOTAS_BEMAIS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
