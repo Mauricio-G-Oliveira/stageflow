@@ -2,17 +2,19 @@ package com.stageflow.service;
 
 import com.stageflow.domain.entity.Musica;
 import com.stageflow.repository.MusicaRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class RepertorioService {
 
     private final MusicaRepository musicaRepository;
+
+    public RepertorioService(MusicaRepository musicaRepository) {
+        this.musicaRepository = musicaRepository;
+    }
 
     @Transactional(readOnly = true)
     public List<Musica> listarPorTenant(String tenantId) {

@@ -2,7 +2,6 @@ package com.stageflow.service;
 
 import com.stageflow.domain.entity.Contrato;
 import com.stageflow.repository.ContratoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,10 +9,13 @@ import java.time.Year;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ContratoService {
 
     private final ContratoRepository contratoRepository;
+
+    public ContratoService(ContratoRepository contratoRepository) {
+        this.contratoRepository = contratoRepository;
+    }
 
     @Transactional(readOnly = true)
     public List<Contrato> listarPorTenant(String tenantId) {

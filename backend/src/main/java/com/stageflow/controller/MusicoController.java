@@ -2,7 +2,6 @@ package com.stageflow.controller;
 
 import com.stageflow.domain.entity.Musico;
 import com.stageflow.service.MusicoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/musicos")
-@RequiredArgsConstructor
 public class MusicoController {
 
     private final MusicoService musicoService;
+
+    public MusicoController(MusicoService musicoService) {
+        this.musicoService = musicoService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Musico>> listar(

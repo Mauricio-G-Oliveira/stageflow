@@ -5,7 +5,6 @@ import com.stageflow.domain.entity.Locacao;
 import com.stageflow.domain.enums.StatusLocacao;
 import com.stageflow.repository.EquipamentoLocacaoRepository;
 import com.stageflow.repository.LocacaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +12,15 @@ import java.time.Year;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class LocadoraService {
 
     private final EquipamentoLocacaoRepository equipamentoRepository;
     private final LocacaoRepository locacaoRepository;
+
+    public LocadoraService(EquipamentoLocacaoRepository equipamentoRepository, LocacaoRepository locacaoRepository) {
+        this.equipamentoRepository = equipamentoRepository;
+        this.locacaoRepository = locacaoRepository;
+    }
 
     @Transactional(readOnly = true)
     public List<EquipamentoLocacao> listarEquipamentos(String tenantId) {

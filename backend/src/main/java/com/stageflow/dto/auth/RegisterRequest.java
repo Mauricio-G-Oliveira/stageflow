@@ -5,14 +5,9 @@ import com.stageflow.domain.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class RegisterRequest {
 
     @NotBlank(message = "O nome é obrigatório")
@@ -30,8 +25,36 @@ public class RegisterRequest {
     private String phone;
     private String instrument;
 
-    // SaaS
     private PlanType planType;
     private BigDecimal monthlyFee;
     private Integer customDays;
+
+    public RegisterRequest() {}
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getInstrument() { return instrument; }
+    public void setInstrument(String instrument) { this.instrument = instrument; }
+
+    public PlanType getPlanType() { return planType; }
+    public void setPlanType(PlanType planType) { this.planType = planType; }
+
+    public BigDecimal getMonthlyFee() { return monthlyFee; }
+    public void setMonthlyFee(BigDecimal monthlyFee) { this.monthlyFee = monthlyFee; }
+
+    public Integer getCustomDays() { return customDays; }
+    public void setCustomDays(Integer customDays) { this.customDays = customDays; }
 }

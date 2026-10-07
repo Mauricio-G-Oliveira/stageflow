@@ -78,7 +78,7 @@ export function ConfiguracoesPage() {
     notify('Chave PIX atualizada para cobrança das assinaturas!')
   }
 
-  const handleChangePassword = (e: FormEvent) => {
+  const handleChangePassword = async (e: FormEvent) => {
     e.preventDefault()
     setPasswordError(null)
 
@@ -94,7 +94,7 @@ export function ConfiguracoesPage() {
 
     if (!user) return
 
-    const res = changePassword(user.id, newPassword)
+    const res = await changePassword(user.id, newPassword)
     if (res.success) {
       setIsPasswordModalOpen(false)
       setNewPassword('')

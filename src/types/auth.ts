@@ -50,11 +50,11 @@ export interface AuthContextType {
   users: User[]
   isAuthenticated: boolean
   isLoading: boolean
-  login: (credentials: LoginCredentials) => { success: boolean; error?: string }
+  login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>
   logout: () => void
-  addUser: (payload: NewUserPayload) => { success: boolean; error?: string }
-  removeUser: (userId: string) => { success: boolean; error?: string }
-  extendAccess: (userId: string, days?: number, fee?: number) => { success: boolean; error?: string }
-  changePassword: (userId: string, newPassword: string) => { success: boolean; error?: string }
-  toggleUserStatus: (userId: string) => { success: boolean; error?: string }
+  addUser: (payload: NewUserPayload) => Promise<{ success: boolean; error?: string }>
+  removeUser: (userId: string) => Promise<{ success: boolean; error?: string }>
+  extendAccess: (userId: string, days?: number, fee?: number) => Promise<{ success: boolean; error?: string }>
+  changePassword: (userId: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
+  toggleUserStatus: (userId: string) => Promise<{ success: boolean; error?: string }>
 }

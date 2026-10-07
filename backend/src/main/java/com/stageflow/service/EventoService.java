@@ -2,17 +2,19 @@ package com.stageflow.service;
 
 import com.stageflow.domain.entity.Evento;
 import com.stageflow.repository.EventoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class EventoService {
 
     private final EventoRepository eventoRepository;
+
+    public EventoService(EventoRepository eventoRepository) {
+        this.eventoRepository = eventoRepository;
+    }
 
     @Transactional(readOnly = true)
     public List<Evento> listarPorTenant(String tenantId) {

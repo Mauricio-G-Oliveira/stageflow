@@ -85,7 +85,7 @@ export function UsuariosPage() {
     setIsModalOpen(true)
   }
 
-  const handleCreateUser = (e: FormEvent) => {
+  const handleCreateUser = async (e: FormEvent) => {
     e.preventDefault()
     setFormError(null)
 
@@ -101,7 +101,7 @@ export function UsuariosPage() {
       customDays: planType === 'teste_3_dias' ? 3 : 30,
     }
 
-    const result = addUser(payload)
+    const result = await addUser(payload)
     if (result.success) {
       setIsModalOpen(false)
       notify(
@@ -114,18 +114,18 @@ export function UsuariosPage() {
     }
   }
 
-  const handleExtendSubscription = (userId: string, userName: string) => {
+  const handleExtendSubscription = async (userId: string, userName: string) => {
     if (window.confirm(`Confirmar renovação de +30 dias para "${userName}" mediante pagamento?`)) {
-      const res = extendAccess(userId, 30)
+      const res = await extendAccess(userId, 30)
       if (res.success) {
         notify(`Acesso de "${userName}" renovado por mais 30 dias com sucesso!`)
       }
     }
   }
 
-  const handleDeleteUser = (userId: string, userName: string) => {
+  const handleDeleteUser = async (userId: string, userName: string) => {
     if (window.confirm(`Tem certeza que deseja remover o acesso de "${userName}"?`)) {
-      const result = removeUser(userId)
+      const result = await removeUser(userId)
       if (!result.success) {
         alert(result.error)
       } else {

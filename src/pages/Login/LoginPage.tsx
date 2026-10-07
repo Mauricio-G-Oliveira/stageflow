@@ -15,7 +15,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [rememberMe, setRememberMe] = useState(true)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
 
@@ -24,11 +24,11 @@ export function LoginPage() {
       return
     }
 
-    const result = login({ email, password })
+    const result = await login({ email, password })
     if (result.success) {
       navigate('/', { replace: true })
     } else {
-      setError(result.error || 'Falha ao autenticar. Tente novamente.')
+      setError(result.error || 'Falha ao autenticar. Verifique suas credenciais.')
     }
   }
 

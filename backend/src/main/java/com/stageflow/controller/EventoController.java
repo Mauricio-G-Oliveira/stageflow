@@ -2,7 +2,6 @@ package com.stageflow.controller;
 
 import com.stageflow.domain.entity.Evento;
 import com.stageflow.service.EventoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/eventos")
-@RequiredArgsConstructor
 public class EventoController {
 
     private final EventoService eventoService;
+
+    public EventoController(EventoService eventoService) {
+        this.eventoService = eventoService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Evento>> listar(

@@ -1,7 +1,6 @@
 package com.stageflow.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,11 +9,6 @@ import java.time.LocalDateTime;
 @Table(name = "tb_musicos", indexes = {
     @Index(name = "idx_musico_tenant", columnList = "tenant_id")
 })
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Musico {
 
     @Id
@@ -40,10 +34,42 @@ public class Musico {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    public Musico() {}
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         if (this.ativo == null) this.ativo = true;
         if (this.tenantId == null) this.tenantId = "tenant-default";
     }
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+
+    public String getInstrumento() { return instrumento; }
+    public void setInstrumento(String instrumento) { this.instrumento = instrumento; }
+
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public BigDecimal getCachePadrao() { return cachePadrao; }
+    public void setCachePadrao(BigDecimal cachePadrao) { this.cachePadrao = cachePadrao; }
+
+    public String getChavePix() { return chavePix; }
+    public void setChavePix(String chavePix) { this.chavePix = chavePix; }
+
+    public Boolean getAtivo() { return ativo; }
+    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
+
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

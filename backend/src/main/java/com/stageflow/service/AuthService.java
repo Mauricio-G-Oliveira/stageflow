@@ -10,7 +10,6 @@ import com.stageflow.dto.auth.LoginResponse;
 import com.stageflow.dto.auth.RegisterRequest;
 import com.stageflow.repository.UsuarioRepository;
 import com.stageflow.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,13 +21,23 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+
+    public AuthService(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtTokenProvider tokenProvider) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+    }
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
@@ -41,18 +50,13 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail().trim().toLowerCase())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
-        // Se a conta estiver vencida e não for admin, atualiza dinamicamente
         if (usuario.getRole() != Role.ADMIN && usuario.getExpiresAt() != null) {
             if (usuario.getExpiresAt().isBefore(LocalDateTime.now())) {
                 usuario.setSubscriptionStatus(SubscriptionStatus.VENCIDO);
             }
         }
 
-        return LoginResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .user(UsuarioResponse.fromEntity(usuario))
-                .build();
+        return new LoginResponse(token, "Bearer", UsuarioResponse.fromEntity(usuario));
     }
 
     @Transactional
@@ -79,20 +83,19 @@ public class AuthService {
                 ? BigDecimal.ZERO
                 : (request.getMonthlyFee() != null ? request.getMonthlyFee() : new BigDecimal("49.90"));
 
-        Usuario novoUsuario = Usuario.builder()
-                .nome(request.getName().trim())
-                .email(normalizedEmail)
-                .senha(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .telefone(request.getPhone())
-                .instrumento(request.getInstrument())
-                .planType(planType)
-                .subscriptionStatus(status)
-                .monthlyFee(fee)
-                .expiresAt(expiresAt)
-                .lastPaymentDate(planType == PlanType.TESTE_3_DIAS ? null : LocalDateTime.now())
-                .tenantId("tenant-default")
-                .build();
+        Usuario novoUsuario = new Usuario();
+        novoUsuario.setNome(request.getName().trim());
+        novoUsuario.setEmail(normalizedEmail);
+        novoUsuario.setSenha(passwordEncoder.encode(request.getPassword()));
+        novoUsuario.setRole(role);
+        novoUsuario.setTelefone(request.getPhone());
+        novoUsuario.setInstrumento(request.getInstrument());
+        novoUsuario.setPlanType(planType);
+        novoUsuario.setSubscriptionStatus(status);
+        novoUsuario.setMonthlyFee(fee);
+        novoUsuario.setExpiresAt(expiresAt);
+        novoUsuario.setLastPaymentDate(planType == PlanType.TESTE_3_DIAS ? null : LocalDateTime.now());
+        novoUsuario.setTenantId("tenant-default");
 
         Usuario salvo = usuarioRepository.save(novoUsuario);
         return UsuarioResponse.fromEntity(salvo);

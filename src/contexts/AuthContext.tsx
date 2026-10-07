@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { AuthContext } from './authContextInstance'
 import type { User, UserWithPassword, LoginCredentials, NewUserPayload } from '../types/auth'
+import { apiRequest, setStoredToken, getStoredToken } from '../services/apiClient'
 
 const STORAGE_USERS_KEY = 'stageflow_users_v3'
 const STORAGE_CURRENT_USER_KEY = 'stageflow_current_user_v3'
@@ -28,16 +29,48 @@ function calculateExpirationDate(days: number): string {
   return d.toISOString()
 }
 
+interface CloudLoginResponse {
+  token: string
+  tokenType: string
+  user: {
+    id: string
+    name: string
+    email: string
+    role: string
+    phone?: string
+    instrument?: string
+    planType?: string
+    subscriptionStatus?: string
+    monthlyFee?: number
+    expiresAt?: string
+    lastPaymentDate?: string
+    createdAt?: string
+  }
+}
+
+interface CloudUserResponse {
+  id: string
+  name: string
+  email: string
+  role: string
+  phone?: string
+  instrument?: string
+  planType?: string
+  subscriptionStatus?: string
+  monthlyFee?: number
+  expiresAt?: string
+  lastPaymentDate?: string
+  createdAt?: string
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<UserWithPassword[]>(() => {
     try {
-      // Check both current v3 key and older v2 key for migration
       const stored = localStorage.getItem(STORAGE_USERS_KEY) || localStorage.getItem('stageflow_users_v2')
       if (stored) {
         const parsed = JSON.parse(stored) as UserWithPassword[]
         const now = new Date()
 
-        // Sincroniza ou adiciona o Administrador Mauricio com a senha xb100pro2815
         const updated = parsed.map((u) => {
           if (u.email.toLowerCase() === DEFAULT_ADMIN.email.toLowerCase()) {
             return {
@@ -51,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
 
-          // Checa vencimento de contas para usuários comuns
           const expiresAt = u.expiresAt || calculateExpirationDate(30)
           const isExpired = new Date(expiresAt) < now && u.role !== 'admin'
           return {
@@ -111,9 +143,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [currentUser])
 
-  const login = ({ email, password }: LoginCredentials) => {
+  // Sincroniza lista de usuários com o banco PostgreSQL no Supabase quando logado como admin
+  useEffect(() => {
+    async function syncCloudUsers() {
+      const token = getStoredToken()
+      if (!token || currentUser?.role !== 'admin') return
+
+      try {
+        const cloudUsers = await apiRequest<CloudUserResponse[]>('/usuarios')
+        if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+          setUsers((prev) => {
+            const merged = [...prev]
+            cloudUsers.forEach((cu) => {
+              const existingIdx = merged.findIndex(
+                (u) => u.email.toLowerCase() === cu.email.toLowerCase() || u.id === cu.id,
+              )
+              const mappedUser: UserWithPassword = {
+                id: cu.id,
+                name: cu.name,
+                email: cu.email,
+                password: '••••••••', // Senha protegida no hash
+                role: cu.role.toLowerCase() === 'admin' ? 'admin' : 'musico',
+                phone: cu.phone,
+                instrument: cu.instrument,
+                createdAt: cu.createdAt || new Date().toISOString(),
+                planType: (cu.planType?.toLowerCase() as any) || 'mensal_30_dias',
+                subscriptionStatus: (cu.subscriptionStatus?.toLowerCase() as any) || 'ativo',
+                monthlyFee: cu.monthlyFee ?? 49.9,
+                expiresAt: cu.expiresAt || calculateExpirationDate(30),
+                lastPaymentDate: cu.lastPaymentDate,
+                paymentStatus: 'pago',
+              }
+
+              if (existingIdx >= 0) {
+                merged[existingIdx] = {
+                  ...merged[existingIdx],
+                  ...mappedUser,
+                  // Mantém senha local se for o admin Mauricio
+                  password: merged[existingIdx].email.toLowerCase() === DEFAULT_ADMIN.email.toLowerCase()
+                    ? DEFAULT_ADMIN.password
+                    : merged[existingIdx].password,
+                }
+              } else {
+                merged.push(mappedUser)
+              }
+            })
+            return merged
+          })
+        }
+      } catch (err) {
+        console.warn('Backend na nuvem temporariamente indisponível para sincronização de usuários:', err)
+      }
+    }
+
+    syncCloudUsers()
+  }, [currentUser])
+
+  const login = async ({ email, password }: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true)
     const normalizedEmail = email.trim().toLowerCase()
+
+    // 1. Tenta autenticar diretamente na API Spring Boot na Nuvem (Render + Supabase)
+    try {
+      const cloudRes = await apiRequest<CloudLoginResponse>('/auth/login', {
+        method: 'POST',
+        data: {
+          email: normalizedEmail,
+          password: password,
+        },
+      })
+
+      if (cloudRes && cloudRes.token && cloudRes.user) {
+        setStoredToken(cloudRes.token)
+        const cu = cloudRes.user
+        const mappedUser: User = {
+          id: cu.id,
+          name: cu.name,
+          email: cu.email,
+          role: cu.role.toLowerCase() === 'admin' ? 'admin' : 'musico',
+          phone: cu.phone,
+          instrument: cu.instrument,
+          createdAt: cu.createdAt || new Date().toISOString(),
+          planType: (cu.planType?.toLowerCase() as any) || 'mensal_30_dias',
+          subscriptionStatus: (cu.subscriptionStatus?.toLowerCase() as any) || 'ativo',
+          monthlyFee: cu.monthlyFee ?? 0,
+          expiresAt: cu.expiresAt || '2099-12-31T23:59:59.000Z',
+          lastPaymentDate: cu.lastPaymentDate,
+          paymentStatus: 'pago',
+        }
+
+        setCurrentUser(mappedUser)
+        setIsLoading(false)
+        return { success: true }
+      }
+    } catch (cloudErr) {
+      console.warn('Autenticação na nuvem indisponível ou falhou, testando credenciais locais:', cloudErr)
+    }
+
+    // 2. Fallback local / offline caso a nuvem esteja inicializando ou sem conexão
     const foundUser = users.find(
       (u) => u.email.toLowerCase() === normalizedEmail && u.password === password,
     )
@@ -131,10 +258,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    setStoredToken(null)
     setCurrentUser(null)
   }
 
-  const addUser = (payload: NewUserPayload) => {
+  const addUser = async (payload: NewUserPayload): Promise<{ success: boolean; error?: string }> => {
     const normalizedEmail = payload.email.trim().toLowerCase()
     const emailExists = users.some((u) => u.email.toLowerCase() === normalizedEmail)
 
@@ -155,8 +283,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fee = planType === 'teste_3_dias' ? 0 : payload.monthlyFee ?? 49.9
     const status = payload.role === 'admin' ? 'isento' : planType === 'teste_3_dias' ? 'teste' : 'ativo'
 
+    let cloudId: string | null = null
+
+    // 1. Envia para o banco de dados PostgreSQL no Supabase através da API
+    try {
+      const regRes = await apiRequest<CloudUserResponse>('/auth/register', {
+        method: 'POST',
+        data: {
+          name: payload.name.trim(),
+          email: normalizedEmail,
+          password: payload.password,
+          role: payload.role.toUpperCase(),
+          phone: payload.phone?.trim() || null,
+          instrument: payload.instrument?.trim() || null,
+          planType: planType.toUpperCase(),
+          customDays: days,
+          monthlyFee: fee,
+        },
+      })
+      if (regRes && regRes.id) {
+        cloudId = regRes.id
+      }
+    } catch (err) {
+      console.warn('Erro ao salvar usuário no banco na nuvem, mantendo no storage local:', err)
+    }
+
     const newUser: UserWithPassword = {
-      id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: cloudId || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       name: payload.name.trim(),
       email: normalizedEmail,
       password: payload.password,
@@ -176,16 +329,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true }
   }
 
-  const removeUser = (userId: string) => {
+  const removeUser = async (userId: string): Promise<{ success: boolean; error?: string }> => {
     if (currentUser?.id === userId) {
       return { success: false, error: 'Você não pode excluir o seu próprio usuário logado.' }
+    }
+
+    try {
+      await apiRequest(`/usuarios/${userId}`, { method: 'DELETE' })
+    } catch (err) {
+      console.warn('Não foi possível remover no backend da nuvem:', err)
     }
 
     setUsers((prev) => prev.filter((u) => u.id !== userId))
     return { success: true }
   }
 
-  const extendAccess = (userId: string, days = 30, fee?: number) => {
+  const extendAccess = async (userId: string, days = 30, fee?: number): Promise<{ success: boolean; error?: string }> => {
     const targetUser = users.find((u) => u.id === userId)
     if (!targetUser) {
       return { success: false, error: 'Usuário não encontrado.' }
@@ -193,9 +352,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const now = new Date()
     const currentExp = new Date(targetUser.expiresAt)
-    // Se ainda não venceu, soma 30 dias na data final. Se já venceu, soma 30 dias a partir de hoje.
     const baseDate = currentExp > now ? currentExp : now
     baseDate.setDate(baseDate.getDate() + days)
+
+    try {
+      await apiRequest(`/usuarios/${userId}/renovar`, {
+        method: 'POST',
+        data: { dias: days },
+      })
+    } catch (err) {
+      console.warn('Não foi possível sincronizar renovação na nuvem:', err)
+    }
 
     setUsers((prev) =>
       prev.map((u) => {
@@ -230,9 +397,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true }
   }
 
-  const changePassword = (userId: string, newPassword: string) => {
+  const changePassword = async (userId: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
     if (!newPassword || newPassword.length < 6) {
       return { success: false, error: 'A nova senha deve ter no mínimo 6 caracteres.' }
+    }
+
+    try {
+      await apiRequest(`/usuarios/${userId}/senha`, {
+        method: 'PATCH',
+        data: { novaSenha: newPassword },
+      })
+    } catch (err) {
+      console.warn('Não foi possível alterar a senha na nuvem:', err)
     }
 
     setUsers((prev) =>
@@ -247,7 +423,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true }
   }
 
-  const toggleUserStatus = (userId: string) => {
+  const toggleUserStatus = async (userId: string): Promise<{ success: boolean; error?: string }> => {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === userId) {

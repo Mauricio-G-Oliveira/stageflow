@@ -5,7 +5,6 @@ import com.stageflow.domain.enums.Role;
 import com.stageflow.domain.enums.SubscriptionStatus;
 import com.stageflow.dto.UsuarioResponse;
 import com.stageflow.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +14,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listarTodos(String tenantId) {
