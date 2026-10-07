@@ -16,6 +16,21 @@ export function setStoredToken(token: string | null) {
   }
 }
 
+// Pre-aquecimento e Keep-Alive automático para manter o servidor no Render sempre acordado e veloz
+export function warmUpBackend() {
+  try {
+    fetch(`${API_URL}/auth/me`, { method: 'GET' }).catch(() => {})
+  } catch {
+    // silencioso
+  }
+}
+
+// Inicia aquecimento imediato e repete a cada 10 minutos enquanto a aba estiver aberta
+warmUpBackend()
+if (typeof window !== 'undefined') {
+  setInterval(warmUpBackend, 10 * 60 * 1000)
+}
+
 interface RequestOptions extends RequestInit {
   data?: unknown
 }

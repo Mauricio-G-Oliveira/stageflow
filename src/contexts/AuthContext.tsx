@@ -281,33 +281,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fee = planType === 'teste_3_dias' ? 0 : payload.monthlyFee ?? 49.9
     const status = payload.role === 'admin' ? 'isento' : planType === 'teste_3_dias' ? 'teste' : 'ativo'
 
-    let cloudId: string | null = null
-
-    // 1. Envia para o banco de dados PostgreSQL no Supabase através da API
-    try {
-      const regRes = await apiRequest<CloudUserResponse>('/auth/register', {
-        method: 'POST',
-        data: {
-          name: payload.name.trim(),
-          email: normalizedEmail,
-          password: payload.password,
-          role: payload.role.toUpperCase(),
-          phone: payload.phone?.trim() || null,
-          instrument: payload.instrument?.trim() || null,
-          planType: planType.toUpperCase(),
-          customDays: days,
-          monthlyFee: fee,
-        },
-      })
-      if (regRes && regRes.id) {
-        cloudId = regRes.id
-      }
-    } catch (err) {
-      console.warn('Erro ao salvar usuário no banco na nuvem, mantendo no storage local:', err)
-    }
+    const localId = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
 
     const newUser: UserWithPassword = {
-      id: cloudId || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: localId,
       name: payload.name.trim(),
       email: normalizedEmail,
       password: payload.password,
@@ -323,7 +300,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       paymentStatus: planType === 'teste_3_dias' ? 'pendente' : 'pago',
     }
 
+    // 1. Adiciona na tela IMEDIATAMENTE (0 milissegundos!)
     setUsers((prev) => [...prev, newUser])
+
+    // 2. Salva em segundo plano no Supabase via API
+    apiRequest<CloudUserResponse>('/auth/register', {
+      method: 'POST',
+      data: {
+        name: payload.name.trim(),
+        email: normalizedEmail,
+        password: payload.password,
+        role: payload.role.toUpperCase(),
+        phone: payload.phone?.trim() || null,
+        instrument: payload.instrument?.trim() || null,
+        planType: planType.toUpperCase(),
+        customDays: days,
+        monthlyFee: fee,
+      },
+    })
+      .then((regRes) => {
+        if (regRes && regRes.id) {
+          setUsers((prev) =>
+            prev.map((u) => (u.id === localId ? { ...u, id: regRes.id } : u)),
+          )
+        }
+      })
+      .catch((err) => {
+        console.warn('Erro ao salvar no banco em segundo plano:', err)
+      })
+
     return { success: true }
   }
 
@@ -332,13 +337,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Você não pode excluir o seu próprio usuário logado.' }
     }
 
-    try {
-      await apiRequest(`/usuarios/${userId}`, { method: 'DELETE' })
-    } catch (err) {
-      console.warn('Não foi possível remover no backend da nuvem:', err)
-    }
-
+    // 1. Remove da tela INSTANTANEAMENTE (0 milissegundos!)
     setUsers((prev) => prev.filter((u) => u.id !== userId))
+
+    // 2. Apaga no banco de dados da nuvem em segundo plano
+    apiRequest(`/usuarios/${userId}`, { method: 'DELETE' }).catch((err) => {
+      console.warn('Não foi possível remover no backend da nuvem:', err)
+    })
+
     return { success: true }
   }
 
@@ -353,15 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const baseDate = currentExp > now ? currentExp : now
     baseDate.setDate(baseDate.getDate() + days)
 
-    try {
-      await apiRequest(`/usuarios/${userId}/renovar`, {
-        method: 'POST',
-        data: { dias: days },
-      })
-    } catch (err) {
-      console.warn('Não foi possível sincronizar renovação na nuvem:', err)
-    }
-
+    // 1. Atualiza na tela INSTANTANEAMENTE (0 milissegundos!)
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === userId) {
@@ -391,6 +389,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : null,
       )
     }
+
+    // 2. Sincroniza em segundo plano no banco da nuvem
+    apiRequest(`/usuarios/${userId}/renovar`, {
+      method: 'POST',
+      data: { dias: days },
+    }).catch((err) => {
+      console.warn('Não foi possível sincronizar renovação na nuvem:', err)
+    })
 
     return { success: true }
   }
