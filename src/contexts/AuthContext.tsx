@@ -10,7 +10,7 @@ const DEFAULT_ADMIN: UserWithPassword = {
   id: 'usr-mauricio-admin',
   name: 'Mauricio G. Oliveira',
   email: 'mauriciogoulart.deoliveira37@gmail.com',
-  password: 'xb100pro2815',
+  password: '', // Autenticado com hash seguro no banco de dados na nuvem
   role: 'admin',
   phone: '(11) 99999-9999',
   instrument: 'Direção Musical / Baixo',
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return {
               ...u,
               name: 'Mauricio G. Oliveira',
-              password: 'xb100pro2815',
+              password: u.password || '',
               role: 'admin' as const,
               planType: 'isento_admin' as const,
               subscriptionStatus: 'isento' as const,
@@ -179,10 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 merged[existingIdx] = {
                   ...merged[existingIdx],
                   ...mappedUser,
-                  // Mantém senha local se for o admin Mauricio
-                  password: merged[existingIdx].email.toLowerCase() === DEFAULT_ADMIN.email.toLowerCase()
-                    ? DEFAULT_ADMIN.password
-                    : merged[existingIdx].password,
+                  // Mantém senha local existente
+                  password: merged[existingIdx].password || '',
                 }
               } else {
                 merged.push(mappedUser)

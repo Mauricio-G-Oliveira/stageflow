@@ -52,13 +52,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedEquipamentos();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${STAGEFLOW_ADMIN_PASSWORD:admin-stageflow-initial}")
+    private String defaultAdminPassword;
+
     private void seedAdminUser() {
         String adminEmail = "mauriciogoulart.deoliveira37@gmail.com";
         if (usuarioRepository.findByEmail(adminEmail).isEmpty()) {
             Usuario admin = new Usuario();
             admin.setNome("Mauricio G. Oliveira");
             admin.setEmail(adminEmail);
-            admin.setSenha(passwordEncoder.encode("xb100pro2815"));
+            admin.setSenha(passwordEncoder.encode(defaultAdminPassword));
             admin.setRole(Role.ADMIN);
             admin.setTelefone("(11) 99999-9999");
             admin.setInstrumento("Direção Musical / Baixo");
@@ -69,7 +72,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             admin.setTenantId("tenant-default");
 
             usuarioRepository.save(admin);
-            log.info(">> [DATABASE SEED] Administrador padrao criado com sucesso: {} (Senha: xb100pro2815)", adminEmail);
+            log.info(">> [DATABASE SEED] Administrador padrao criado com sucesso: {}", adminEmail);
         }
     }
 

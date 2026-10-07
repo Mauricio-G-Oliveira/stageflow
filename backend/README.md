@@ -35,13 +35,13 @@ SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
 
 ---
 
-## 🔐 Administrador Padrão Semeado Automaticamente
+## 🔐 Administrador do Sistema
 
 Ao iniciar a aplicação pela primeira vez, o `DatabaseSeeder` cria automaticamente a conta de Administrador oficial:
 
 - **E-mail:** `mauriciogoulart.deoliveira37@gmail.com`
-- **Senha:** `xb100pro2815`
 - **Perfil:** `ADMIN` (Isento e Vitalício)
+- **Credenciais:** Gerenciadas de forma restrita e segura pelo proprietário do sistema.
 
 ---
 
