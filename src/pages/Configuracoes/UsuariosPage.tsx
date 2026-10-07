@@ -295,6 +295,30 @@ export function UsuariosPage() {
           >
             Testes 3d ({emTeste3Dias})
           </button>
+
+          {/* Botão de Limpeza Rápida de Duplicados se houver repetições */}
+          {users.some((u, idx) => users.findIndex((x) => x.email.toLowerCase() === u.email.toLowerCase()) !== idx) && (
+            <button
+              onClick={() => {
+                if (window.confirm('Deseja remover as repetições e deixar apenas 1 usuário de cada e-mail?')) {
+                  const seen = new Set<string>()
+                  const unique = users.filter((u) => {
+                    const k = u.email.toLowerCase()
+                    if (seen.has(k)) return false
+                    seen.add(k)
+                    return true
+                  })
+                  localStorage.setItem('stageflow_users_v3', JSON.stringify(unique))
+                  window.location.reload()
+                }
+              }}
+              className="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all flex items-center gap-1.5 animate-pulse ml-auto"
+              title="Limpar cadastros repetidos mantendo apenas 1"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-amber-400" />
+              Limpar Cadastros Repetidos
+            </button>
+          )}
         </div>
       </div>
 
@@ -304,12 +328,14 @@ export function UsuariosPage() {
           <table className="w-full text-left text-sm text-slate-300">
             <thead className="bg-slate-950/60 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800">
               <tr>
-                <th className="px-6 py-4">Assinante / E-mail</th>
-                <th className="px-6 py-4">Plano & Status</th>
-                <th className="px-6 py-4">Vencimento</th>
-                <th className="px-6 py-4">Mensalidade</th>
-                <th className="px-6 py-4">WhatsApp</th>
-                <th className="px-6 py-4 text-right">Ações de Cobrança</th>
+                <th className="px-3 sm:px-4 py-3">Assinante / E-mail</th>
+                <th className="px-3 sm:px-4 py-3">Plano & Status</th>
+                <th className="px-3 sm:px-4 py-3">Vencimento</th>
+                <th className="px-3 sm:px-4 py-3">Mensalidade</th>
+                <th className="px-3 sm:px-4 py-3">WhatsApp</th>
+                <th className="px-3 sm:px-4 py-3 text-right sticky right-0 bg-slate-950/95 backdrop-blur-md shadow-[-8px_0_12px_rgba(0,0,0,0.6)] z-10 min-w-[210px]">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -329,13 +355,13 @@ export function UsuariosPage() {
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0e6f5c] to-teal-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                      <td className="px-3 sm:px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0e6f5c] to-teal-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
                             {item.name.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <span className="font-semibold text-white">{item.name}</span>
                               {isCurrent && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 font-medium">
@@ -356,27 +382,27 @@ export function UsuariosPage() {
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-4 py-3">
                         {isAdmin ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                             Acesso Vitalício
                           </span>
                         ) : isExpired ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/40 animate-pulse">
-                            <Lock className="w-3.5 h-3.5" /> Conta Vencida
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/40 animate-pulse">
+                            <Lock className="w-3.5 h-3.5" /> Vencida
                           </span>
                         ) : isTrial ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                            <Clock className="w-3.5 h-3.5" /> Teste (3 Dias)
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                            <Clock className="w-3.5 h-3.5" /> Teste (3d)
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Assinante Ativo
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Ativo
                           </span>
                         )}
                       </td>
 
-                      <td className="px-6 py-4 text-xs">
+                      <td className="px-3 sm:px-4 py-3 text-xs">
                         {isAdmin ? (
                           <span className="text-slate-500">Ilimitado</span>
                         ) : (
@@ -399,11 +425,11 @@ export function UsuariosPage() {
                         )}
                       </td>
 
-                      <td className="px-6 py-4 font-mono font-bold text-xs text-white">
+                      <td className="px-3 sm:px-4 py-3 font-mono font-bold text-xs text-white">
                         {isAdmin ? 'Isento' : formatCurrency(item.monthlyFee || 49.9)}
                       </td>
 
-                      <td className="px-6 py-4 text-xs text-slate-400">
+                      <td className="px-3 sm:px-4 py-3 text-xs text-slate-400">
                         {item.phone ? (
                           <span className="flex items-center gap-1 text-slate-300">
                             <Phone className="w-3.5 h-3.5 text-teal-400" />
@@ -414,24 +440,24 @@ export function UsuariosPage() {
                         )}
                       </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-3 sm:px-4 py-3 text-right sticky right-0 bg-slate-900/95 backdrop-blur-md shadow-[-8px_0_12px_rgba(0,0,0,0.6)] z-10 min-w-[210px]">
+                        <div className="flex items-center justify-end gap-1.5">
                           {!isAdmin && (
                             <>
                               {/* Botão de Cobrança WhatsApp / PIX */}
                               <button
                                 onClick={() => setBillingUser(item)}
-                                className="p-2 rounded-lg text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all flex items-center gap-1 text-xs font-semibold"
+                                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all flex items-center gap-1 text-xs font-semibold shrink-0"
                                 title="Enviar Cobrança / PIX via WhatsApp"
                               >
                                 <MessageCircle className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Cobrar PIX</span>
+                                <span className="hidden sm:inline">PIX</span>
                               </button>
 
                               {/* Botão de Renovação +30 Dias */}
                               <button
                                 onClick={() => handleExtendSubscription(item.id, item.name)}
-                                className="p-2 rounded-lg text-teal-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1 text-xs font-medium"
+                                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-teal-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1 text-xs font-medium shrink-0"
                                 title="Renovar +30 dias após pagamento"
                               >
                                 <RefreshCw className="w-3.5 h-3.5 text-teal-400" />
@@ -442,7 +468,7 @@ export function UsuariosPage() {
                               {!isCurrent && (
                                 <button
                                   onClick={() => handleDeleteUser(item.id, item.name)}
-                                  className="p-2 rounded-lg text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 transition-all flex items-center gap-1 text-xs font-semibold"
+                                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-rose-400 hover:text-white bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 transition-all flex items-center gap-1 text-xs font-semibold shrink-0 shadow-sm"
                                   title="Excluir Usuário"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
