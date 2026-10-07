@@ -15,6 +15,7 @@ import {
   Send,
   AlertTriangle,
   Lock,
+  Loader2,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import type { UserRole, NewUserPayload, PlanType } from '../../types/auth'
@@ -46,6 +47,7 @@ export function UsuariosPage() {
   const [monthlyFee, setMonthlyFee] = useState<number>(49.9)
   const [formError, setFormError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const adminPixKey = localStorage.getItem(STORAGE_PIX_KEY) || 'mauriciogoulart.deoliveira37@gmail.com'
   const adminPixTitular = localStorage.getItem(STORAGE_PIX_TITULAR) || 'Mauricio G. Oliveira'
@@ -87,30 +89,36 @@ export function UsuariosPage() {
 
   const handleCreateUser = async (e: FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     setFormError(null)
+    setIsSubmitting(true)
 
-    const payload: NewUserPayload = {
-      name,
-      email,
-      password,
-      role,
-      instrument: instrument || undefined,
-      phone: phone || undefined,
-      planType,
-      monthlyFee: planType === 'teste_3_dias' ? 0 : Number(monthlyFee),
-      customDays: planType === 'teste_3_dias' ? 3 : 30,
-    }
+    try {
+      const payload: NewUserPayload = {
+        name,
+        email,
+        password,
+        role,
+        instrument: instrument || undefined,
+        phone: phone || undefined,
+        planType,
+        monthlyFee: planType === 'teste_3_dias' ? 0 : Number(monthlyFee),
+        customDays: planType === 'teste_3_dias' ? 3 : 30,
+      }
 
-    const result = await addUser(payload)
-    if (result.success) {
-      setIsModalOpen(false)
-      notify(
-        planType === 'teste_3_dias'
-          ? `Usuário "${name}" cadastrado com Acesso de Teste (3 dias)!`
-          : `Assinante "${name}" cadastrado com 30 dias de acesso!`,
-      )
-    } else {
-      setFormError(result.error || 'Erro ao cadastrar usuário.')
+      const result = await addUser(payload)
+      if (result.success) {
+        setIsModalOpen(false)
+        notify(
+          planType === 'teste_3_dias'
+            ? `Usuário "${name}" cadastrado com Acesso de Teste (3 dias)!`
+            : `Assinante "${name}" cadastrado com 30 dias de acesso!`,
+        )
+      } else {
+        setFormError(result.error || 'Erro ao cadastrar usuário.')
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -430,14 +438,15 @@ export function UsuariosPage() {
                                 <span className="hidden sm:inline">+30d</span>
                               </button>
 
-                              {/* Excluir */}
+                              {/* Excluir Usuário */}
                               {!isCurrent && (
                                 <button
                                   onClick={() => handleDeleteUser(item.id, item.name)}
-                                  className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                  title="Remover Acesso"
+                                  className="p-2 rounded-lg text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 transition-all flex items-center gap-1 text-xs font-semibold"
+                                  title="Excluir Usuário"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Excluir</span>
                                 </button>
                               )}
                             </>
@@ -592,11 +601,18 @@ export function UsuariosPage() {
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-                <Button variant="outline" size="sm" type="button" onClick={() => setIsModalOpen(false)}>
+                <Button variant="outline" size="sm" type="button" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>
                   Cancelar
                 </Button>
-                <Button variant="primary" size="sm" type="submit">
-                  Cadastrar Assinante
+                <Button variant="primary" size="sm" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Salvando na Nuvem...
+                    </span>
+                  ) : (
+                    'Cadastrar Assinante'
+                  )}
                 </Button>
               </div>
             </form>
