@@ -17,21 +17,28 @@ import {
   Volume2,
   Sun,
   Moon,
+  Download,
+  Smartphone,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../contexts/ThemeContext'
+import { usePwaInstall } from '../../hooks/usePwaInstall'
 import { Logo } from '../../components/Logo/Logo'
+import { InstallPwaModal } from '../../components/InstallPwaModal'
 
 export function DashboardLayout() {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { isInstalled } = usePwaInstall()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [installModalOpen, setInstallModalOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
+
 
   const navItems = [
     {
@@ -104,6 +111,16 @@ export function DashboardLayout() {
       <header className="md:hidden flex items-center justify-between px-4 py-3.5 bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md">
         <Logo size="sm" />
         <div className="flex items-center gap-2">
+          {!isInstalled && (
+            <button
+              onClick={() => setInstallModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs font-semibold hover:text-white transition-colors"
+              title="Instalar App no Celular"
+            >
+              <Download className="w-3.5 h-3.5 text-teal-400" />
+              <span>Instalar</span>
+            </button>
+          )}
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
@@ -176,6 +193,30 @@ export function DashboardLayout() {
           })}
         </nav>
 
+        {/* Install App Promo Box in Sidebar */}
+        {!isInstalled && (
+          <div className="mx-3 mb-2 p-3 rounded-xl bg-gradient-to-br from-[#0e6f5c]/20 to-teal-900/10 border border-[#0e6f5c]/30">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5 text-teal-400" /> App Mobile & PC
+              </span>
+              <span className="text-[10px] text-teal-300 font-bold uppercase tracking-wider bg-teal-500/20 px-1.5 py-0.5 rounded border border-teal-500/30">
+                PWA
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 mb-2 leading-relaxed">
+              Instale o app direto no celular ou desktop.
+            </p>
+            <button
+              onClick={() => setInstallModalOpen(true)}
+              className="w-full py-1.5 px-3 rounded-lg bg-[#0e6f5c] hover:bg-[#128a73] text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-sm"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Instalar StageFlow
+            </button>
+          </div>
+        )}
+
         {/* User Card & Logout in Sidebar Footer */}
         <div className="p-3 border-t border-slate-800/80 bg-slate-900/50">
           <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-3">
@@ -222,6 +263,18 @@ export function DashboardLayout() {
             </h2>
           </div>
           <div className="flex items-center gap-4">
+            {/* Install App Button on Desktop */}
+            {!isInstalled && (
+              <button
+                onClick={() => setInstallModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-xs font-semibold text-teal-300 hover:text-white transition-all shadow-xs"
+                title="Instalar StageFlow no computador ou celular"
+              >
+                <Download className="w-3.5 h-3.5 text-teal-400" />
+                <span>Instalar App</span>
+              </button>
+            )}
+
             {/* Quick Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -263,6 +316,12 @@ export function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Install PWA Modal */}
+      <InstallPwaModal
+        isOpen={installModalOpen}
+        onClose={() => setInstallModalOpen(false)}
+      />
     </div>
   )
 }
