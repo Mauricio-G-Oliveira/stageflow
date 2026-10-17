@@ -3,47 +3,55 @@ import { Link } from 'react-router-dom'
 import {
   Calendar,
   Users2,
-  Music2,
   Clock,
   ArrowUpRight,
-  UserPlus,
   PlusCircle,
   MapPin,
   FileText,
-  UserCheck,
+  FileSpreadsheet,
+  Volume2,
+  Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import type { Evento } from '../../types/evento'
 import type { Musico } from '../../types/musico'
-import type { Contrato } from '../../types/contrato'
+import type { Orcamento } from '../../types/orcamento'
+import type { EquipamentoBanda } from '../../types/equipamentoBanda'
 import { eventoService } from '../../services/eventoService'
 import { musicoService } from '../../services/musicoService'
-import { repertorioService } from '../../services/repertorioService'
-import { contratoService } from '../../services/contratoService'
+import { orcamentoService } from '../../services/orcamentoService'
+import { equipamentoBandaService } from '../../services/equipamentoBandaService'
+import { bandaConfigService } from '../../services/bandaConfigService'
 import { Button } from '../../components/Button/Button'
 
 export function DashboardPage() {
   const { user } = useAuth()
   const [eventos, setEventos] = useState<Evento[]>([])
   const [musicos, setMusicos] = useState<Musico[]>([])
-  const [contratos, setContratos] = useState<Contrato[]>([])
-  const [totalMusicas, setTotalMusicas] = useState(0)
+  const [orcamentos, setOrcamentos] = useState<Orcamento[]>([])
+  const [equipamentos, setEquipamentos] = useState<EquipamentoBanda[]>([])
+
+  const bandaConfig = bandaConfigService.getConfig()
 
   useEffect(() => {
     const load = async () => {
       const evts = await eventoService.listarTodos()
       const mus = await musicoService.listarTodos()
-      const songs = await repertorioService.listarTodas()
-      const ctrs = await contratoService.listarTodos()
+      const orcs = await orcamentoService.listarTodos()
+      const eqs = await equipamentoBandaService.listarTodos()
       setEventos(evts)
       setMusicos(mus)
-      setTotalMusicas(songs.length)
-      setContratos(ctrs)
+      setOrcamentos(orcs)
+      setEquipamentos(eqs)
     }
     load()
   }, [])
 
+
   const faturamentoTotal = eventos.reduce((acc, curr) => acc + (curr.cacheTotal || 0), 0)
+  const patrimonioSom = equipamentos.reduce((acc, curr) => acc + (curr.valorPago || 0), 0)
+  const musicosPalco = musicos.filter((m) => m.categoria === 'musico').length
+  const equipeTecnica = musicos.filter((m) => m.categoria === 'tecnico').length
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -54,31 +62,39 @@ export function DashboardPage() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-teal-200 border border-white/15">
-              Painel Principal
+              Painel Exclusivo da Banda
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Olá, {user?.name}! 👋
+              {bandaConfig.nomeBanda}
             </h1>
-            <p className="text-sm text-teal-100/80 max-w-xl">
-              Você está conectado como{' '}
-              <strong className="text-white capitalize">
-                {user?.role === 'admin' ? 'Administrador do StageFlow' : user?.role}
-              </strong>
-              . Aqui está o resumo das suas bandas, eventos e equipe de 5+ músicos.
+            <p className="text-sm text-teal-100/90 max-w-xl">
+              Bem-vindo, <strong>{user?.name}</strong>! Este painel é dedicado exclusivamente para gerenciar os shows, orçamentos para clientes, repertório, equipe (4 músicos + roadie) e inventário de som da sua banda.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Link to="/contratos">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link to="/presskit">
               <Button
                 variant="secondary"
                 size="md"
-                leftIcon={<FileText className="w-4 h-4 text-teal-400" />}
+                leftIcon={<Sparkles className="w-4 h-4 text-teal-300" />}
                 className="bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-md"
               >
-                Emitir Contrato ({contratos.length})
+                Press Kit
               </Button>
             </Link>
+
+            <Link to="/orcamentos">
+              <Button
+                variant="secondary"
+                size="md"
+                leftIcon={<FileSpreadsheet className="w-4 h-4 text-teal-300" />}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-md"
+              >
+                + Novo Orçamento
+              </Button>
+            </Link>
+
             <Link to="/agenda">
               <Button
                 variant="primary"
@@ -86,7 +102,7 @@ export function DashboardPage() {
                 leftIcon={<PlusCircle className="w-4 h-4" />}
                 className="bg-white text-[#0e6f5c] hover:bg-teal-50 font-bold shadow-lg"
               >
-                Novo Show na Agenda
+                Novo Show
               </Button>
             </Link>
           </div>
@@ -104,58 +120,66 @@ export function DashboardPage() {
           </div>
           <p className="text-3xl font-bold text-white mt-3">{eventos.length}</p>
           <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1 font-semibold">
-            R$ {faturamentoTotal.toLocaleString('pt-BR')} faturados
+            R$ {faturamentoTotal.toLocaleString('pt-BR')} em cachês
           </p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Integrantes da Banda</span>
+            <span className="text-xs font-semibold text-slate-400">Músicos & Equipe</span>
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
               <Users2 className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mt-3">{musicos.length}</p>
-          <p className="text-xs text-slate-400 mt-1">Formação para 5+ músicos</p>
+          <p className="text-3xl font-bold text-white mt-3">{musicos.length} pessoas</p>
+          <p className="text-xs text-indigo-300 mt-1 font-medium">
+            {musicosPalco} músicos no palco + {equipeTecnica} roadie
+          </p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Repertório Musical</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Music2 className="w-5 h-5" />
+            <span className="text-xs font-semibold text-slate-400">Orçamentos p/ Clientes</span>
+            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+              <FileSpreadsheet className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mt-3">{totalMusicas}</p>
-          <p className="text-xs text-slate-400 mt-1">Músicas com tom e arranjo</p>
+          <p className="text-3xl font-bold text-white mt-3">{orcamentos.length}</p>
+          <p className="text-xs text-cyan-300 mt-1 font-medium">Propostas comerciais com WhatsApp</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Contratos Emitidos</span>
-            <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center">
-              <FileText className="w-5 h-5" />
+            <span className="text-xs font-semibold text-slate-400">Patrimônio de Som da Banda</span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <Volume2 className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mt-3">{contratos.length}</p>
-          <p className="text-xs text-slate-400 mt-1">Prontos para PDF / assinatura</p>
+          <p className="text-2xl font-bold text-emerald-400 mt-3 font-mono">
+            R$ {patrimonioSom.toLocaleString('pt-BR')}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            {equipamentos.length} itens registrados no inventário
+          </p>
         </div>
       </div>
 
-      {/* Two columns: Upcoming Shows and Recent Team Members */}
+      {/* Two columns: Upcoming Shows and Recent Quotes / Team */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Upcoming Shows */}
         <div className="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
             <div>
-              <h2 className="text-lg font-bold text-white">Próximos Eventos & Shows</h2>
-              <p className="text-xs text-slate-400">Acompanhe horários de montagem, passagem de som e quem fechou</p>
+              <h2 className="text-lg font-bold text-white">Próximos Shows da Banda</h2>
+              <p className="text-xs text-slate-400">
+                Horários de montagem do som, passagem e início da apresentação
+              </p>
             </div>
             <Link
               to="/agenda"
               className="text-xs font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1"
             >
-              Abrir Agenda
+              Abrir Agenda Completa
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -164,7 +188,7 @@ export function DashboardPage() {
             {eventos.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-8">Nenhum evento agendado.</p>
             ) : (
-              eventos.map((event) => (
+              eventos.slice(0, 4).map((event) => (
                 <div
                   key={event.id}
                   className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-teal-500/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
@@ -186,10 +210,6 @@ export function DashboardPage() {
                         {event.localNome} ({event.cidade})
                       </span>
                     </div>
-                    <div className="pt-1 text-[11px] text-indigo-300 flex items-center gap-1">
-                      <UserCheck className="w-3.5 h-3.5" />
-                      Fechado por: <strong>{event.fechadoPor?.nome}</strong>
-                    </div>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
@@ -198,14 +218,9 @@ export function DashboardPage() {
                         R$ {event.cacheTotal.toLocaleString('pt-BR')}
                       </span>
                       <span className="text-[10px] text-slate-500">
-                        R$ {event.cachePorMusico}/músico
+                        {event.status === 'confirmado' ? 'Confirmado' : 'Em negociação'}
                       </span>
                     </div>
-                    <Link to="/contratos">
-                      <Button variant="outline" size="sm" className="text-xs py-1 px-2.5">
-                        Contrato
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               ))
@@ -213,63 +228,124 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Right Column: Band Members Quick List */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-            <div>
-              <h2 className="text-lg font-bold text-white">Músicos da Banda</h2>
-              <p className="text-xs text-slate-400">Formação 5+ integrantes</p>
+        {/* Right Column: Quick Links & Team Overview */}
+        <div className="space-y-6">
+          {/* Quick Shortcuts */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
+            <h3 className="text-sm font-bold text-white">Ações Rápidas da Banda</h3>
+
+            <div className="space-y-2">
+              <Link
+                to="/orcamentos"
+                className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-teal-500/40 flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center">
+                    <FileSpreadsheet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white group-hover:text-teal-300 block">
+                      Gerar Orçamento p/ Cliente
+                    </span>
+                    <span className="text-[10px] text-slate-400">Valores, datas e WhatsApp</span>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white" />
+              </Link>
+
+              <Link
+                to="/presskit"
+                className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-teal-500/40 flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white group-hover:text-indigo-300 block">
+                      Press Kit Oficial
+                    </span>
+                    <span className="text-[10px] text-slate-400">Bio, rider técnico e mapa</span>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white" />
+              </Link>
+
+              <Link
+                to="/equipamentos"
+                className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-teal-500/40 flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <Volume2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white group-hover:text-emerald-300 block">
+                      Inventário de Som da Banda
+                    </span>
+                    <span className="text-[10px] text-slate-400">Valores pagos e quem pagou</span>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white" />
+              </Link>
+
+              <Link
+                to="/contratos"
+                className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-teal-500/40 flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white group-hover:text-violet-300 block">
+                      Contratos de Show
+                    </span>
+                    <span className="text-[10px] text-slate-400">Modelo personalizável</span>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white" />
+              </Link>
             </div>
-            <Link
-              to="/musicos"
-              className="text-xs font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1"
-            >
-              Ver todos
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
 
-          <div className="space-y-3">
-            {musicos.slice(0, 5).map((u) => {
-              const initials = u.nome
-                .split(' ')
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join('')
-                .toUpperCase()
+          {/* Team Snapshot */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Equipe da Banda</h3>
+              <Link to="/musicos" className="text-xs text-teal-400 hover:underline">
+                Gerenciar
+              </Link>
+            </div>
 
-              return (
+            <div className="space-y-2">
+              {musicos.slice(0, 5).map((m) => (
                 <div
-                  key={u.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800/80"
+                  key={m.id}
+                  className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#0e6f5c] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                      {initials}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                        m.categoria === 'musico'
+                          ? 'bg-teal-500/20 text-teal-300'
+                          : 'bg-amber-500/20 text-amber-300'
+                      }`}
+                    >
+                      {m.categoria === 'musico' ? 'M' : 'T'}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-white">{u.nome}</p>
-                      <p className="text-[11px] text-teal-400">{u.instrumentoPrincipal}</p>
+                      <span className="font-semibold text-white block">{m.nome}</span>
+                      <span className="text-[10px] text-slate-400">{m.instrumentoPrincipal}</span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                    {u.tipoVinculo}
+                  <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                    R$ {(m.cachePadrao || 0).toLocaleString('pt-BR')}
                   </span>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
-
-          <Link to="/musicos" className="block pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              fullWidth
-              leftIcon={<UserPlus className="w-3.5 h-3.5" />}
-            >
-              Cadastrar Mais Integrantes
-            </Button>
-          </Link>
         </div>
       </div>
     </div>

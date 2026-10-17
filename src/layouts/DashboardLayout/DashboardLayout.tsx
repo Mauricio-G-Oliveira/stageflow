@@ -5,10 +5,9 @@ import {
   Calendar,
   CalendarDays,
   Users2,
-  Mic2,
   Music2,
   FileText,
-  UserCheck,
+  FileSpreadsheet,
   Settings,
   LogOut,
   Menu,
@@ -19,10 +18,12 @@ import {
   Moon,
   Download,
   Smartphone,
+  Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../contexts/ThemeContext'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
+import { bandaConfigService } from '../../services/bandaConfigService'
 import { Logo } from '../../components/Logo/Logo'
 import { InstallPwaModal } from '../../components/InstallPwaModal'
 
@@ -33,12 +34,12 @@ export function DashboardLayout() {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [installModalOpen, setInstallModalOpen] = useState(false)
+  const bandaConfig = bandaConfigService.getConfig()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
-
 
   const navItems = [
     {
@@ -49,28 +50,30 @@ export function DashboardLayout() {
     },
     {
       to: '/agenda',
-      label: 'Agenda',
+      label: 'Agenda de Shows',
       icon: CalendarDays,
     },
     {
       to: '/eventos',
-      label: 'Eventos & Shows',
+      label: 'Shows & Eventos',
       icon: Calendar,
     },
     {
-      to: '/bandas',
-      label: 'Bandas',
-      icon: Users2,
-    },
-    {
       to: '/musicos',
-      label: 'Músicos',
-      icon: Mic2,
+      label: 'Músicos & Equipe',
+      icon: Users2,
+      badge: '4+1',
     },
     {
       to: '/repertorio',
-      label: 'Repertório',
+      label: 'Repertório & Letras',
       icon: Music2,
+    },
+    {
+      to: '/orcamentos',
+      label: 'Orçamentos',
+      icon: FileSpreadsheet,
+      badge: 'Clientes',
     },
     {
       to: '/contratos',
@@ -78,17 +81,16 @@ export function DashboardLayout() {
       icon: FileText,
     },
     {
-      to: '/locadora',
-      label: 'Locadora de Som',
-      icon: Volume2,
-      badge: 'Som/Luz',
+      to: '/presskit',
+      label: 'Press Kit da Banda',
+      icon: Sparkles,
+      badge: 'Envio',
     },
     {
-      to: '/usuarios',
-      label: 'SaaS & Assinantes',
-      icon: UserCheck,
-      adminOnly: true,
-      badge: 'Admin',
+      to: '/equipamentos',
+      label: 'Inventário de Som',
+      icon: Volume2,
+      badge: 'Patrimônio',
     },
     {
       to: '/configuracoes',
@@ -258,10 +260,12 @@ export function DashboardLayout() {
         {/* Desktop Top Header */}
         <header className="hidden md:flex items-center justify-between px-8 py-4 bg-slate-900/40 border-b border-slate-800/80 backdrop-blur-md">
           <div>
-            <h2 className="text-sm font-semibold text-slate-300">
-              Painel de Gestão • StageFlow
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <span className="text-teal-400 font-extrabold">{bandaConfig.nomeBanda}</span>
+              <span className="text-slate-500 font-normal hidden lg:inline">• Painel Exclusivo da Banda</span>
             </h2>
           </div>
+
           <div className="flex items-center gap-4">
             {/* Install App Button on Desktop */}
             {!isInstalled && (

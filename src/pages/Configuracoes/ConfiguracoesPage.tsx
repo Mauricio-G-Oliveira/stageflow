@@ -14,9 +14,11 @@ import {
   MessageSquare,
   Send,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../contexts/ThemeContext'
+import { bandaConfigService } from '../../services/bandaConfigService'
 import { Button } from '../../components/Button/Button'
 import { Input } from '../../components/Input/Input'
 
@@ -28,6 +30,12 @@ export function ConfiguracoesPage() {
   const { theme, setTheme, toggleTheme } = useTheme()
 
   const [notification, setNotification] = useState<string | null>(null)
+
+  // Identidade da Banda
+  const [bandaNome, setBandaNome] = useState(() => bandaConfigService.getConfig().nomeBanda)
+  const [bandaGenero, setBandaGenero] = useState(() => bandaConfigService.getConfig().generoMusical)
+  const [bandaCidade, setBandaCidade] = useState(() => bandaConfigService.getConfig().cidadeEstado)
+  const [bandaChavePix, setBandaChavePix] = useState(() => bandaConfigService.getConfig().chavePix)
 
   // Modal Alterar Senha
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
@@ -69,6 +77,17 @@ export function ConfiguracoesPage() {
   const notify = (msg: string) => {
     setNotification(msg)
     setTimeout(() => setNotification(null), 3500)
+  }
+
+  const handleSaveBandaConfig = (e: FormEvent) => {
+    e.preventDefault()
+    bandaConfigService.saveConfig({
+      nomeBanda: bandaNome.trim(),
+      generoMusical: bandaGenero.trim(),
+      cidadeEstado: bandaCidade.trim(),
+      chavePix: bandaChavePix.trim(),
+    })
+    notify(`Identidade da banda atualizada: "${bandaNome.trim()}"!`)
   }
 
   const handleSavePix = (e: FormEvent) => {
@@ -143,6 +162,65 @@ export function ConfiguracoesPage() {
           <span>{notification}</span>
         </div>
       )}
+
+      {/* Card: Identidade da Banda & Nome Oficial */}
+      <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-3 border-b border-slate-800/80 pb-4">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-white">Identidade da Banda (Personalização Exclusiva)</h3>
+            <p className="text-xs text-slate-400">
+              Defina o nome da banda, estilos e chave Pix. Esses dados são usados automaticamente nos contratos, orçamentos e press kit.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveBandaConfig} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Nome da Banda (ou Provisório)"
+              placeholder="Ex: [NOME DA BANDA] ou Os Lendários"
+              value={bandaNome}
+              onChange={(e) => setBandaNome(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Gênero / Estilo Musical"
+              placeholder="Ex: Pop Rock, Baile & Anos 80"
+              value={bandaGenero}
+              onChange={(e) => setBandaGenero(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Cidade / Estado Base"
+              placeholder="Ex: São Paulo - SP"
+              value={bandaCidade}
+              onChange={(e) => setBandaCidade(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Chave PIX da Banda (p/ Sinais de Reserva & Cachês)"
+              placeholder="E-mail, CPF ou celular"
+              value={bandaChavePix}
+              onChange={(e) => setBandaChavePix(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button variant="primary" size="md" type="submit">
+              Salvar Identidade da Banda
+            </Button>
+          </div>
+        </form>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card: Tema Claro / Escuro */}

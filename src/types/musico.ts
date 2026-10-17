@@ -1,9 +1,11 @@
-export type TipoVinculoMusico = 'fixo' | 'freelancer' | 'substituto' | 'tecnico'
+export type TipoVinculoMusico = 'fixo' | 'freelancer' | 'substituto' | 'apoio'
+export type CategoriaEquipe = 'musico' | 'tecnico'
 
 export interface Musico {
   id: string
   nome: string
-  instrumentoPrincipal: string
+  categoria: CategoriaEquipe // 'musico' (palco) ou 'tecnico' (roadie/som/luz)
+  instrumentoPrincipal: string // Função/Instrumento (ex: "Vocal", "Guitarra", "Baixo", "Bateria", "Roadie", "Técnico de Som")
   instrumentosSecundarios?: string[]
   tipoVinculo: TipoVinculoMusico
   telefone: string

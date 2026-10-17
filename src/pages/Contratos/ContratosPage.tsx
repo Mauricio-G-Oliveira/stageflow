@@ -26,7 +26,7 @@ export function ContratosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [selectedContrato, setSelectedContrato] = useState<Contrato | null>(null)
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
-  const [selectedModelo, setSelectedModelo] = useState<ModeloContrato>('casamento')
+  const [selectedModelo, setSelectedModelo] = useState<ModeloContrato>('banda_sem_nome')
   const [selectedEventoId, setSelectedEventoId] = useState<string>('')
   const [notification, setNotification] = useState<string | null>(null)
 
@@ -62,7 +62,7 @@ export function ContratosPage() {
     const fakeEvento: Evento = {
       id: `evt-manual-${Date.now()}`,
       titulo: 'Apresentação Musical - Contrato Personalizado',
-      tipoEvento: selectedModelo,
+      tipoEvento: selectedModelo === 'banda_sem_nome' ? 'festa_fechada' : selectedModelo,
       data: new Date().toISOString().split('T')[0],
       status: 'confirmado',
       horarioMontagem: '16:00',
@@ -140,6 +140,11 @@ export function ContratosPage() {
   }
 
   const modelosConfig: Record<ModeloContrato, { label: string; icon: typeof Sparkles; desc: string }> = {
+    banda_sem_nome: {
+      label: '⭐ Banda (Nome a Definir)',
+      icon: Sparkles,
+      desc: 'Modelo pronto para banda sem nome oficial ainda, com formação de 4 músicos + roadie e cláusulas de segurança.',
+    },
     casamento: {
       label: 'Casamento',
       icon: Sparkles,
@@ -379,7 +384,7 @@ export function ContratosPage() {
                   1. Selecione o Modelo do Contrato:
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {(['casamento', 'festa_fechada', 'corporativo', 'geral'] as ModeloContrato[]).map((m) => {
+                  {(['banda_sem_nome', 'casamento', 'festa_fechada', 'corporativo', 'geral'] as ModeloContrato[]).map((m) => {
                     const cfg = modelosConfig[m]
                     return (
                       <button

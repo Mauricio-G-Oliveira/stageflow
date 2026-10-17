@@ -158,13 +158,32 @@ export function VisualizadorContrato({
 
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-1 text-xs">
             <p>
-              <strong>CONTRATADA (BANDA):</strong> {currentContrato.contratado.nomeBanda}, representada neste ato por{' '}
+              <strong>CONTRATADA (BANDA / ATRAÇÃO):</strong>{' '}
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={currentContrato.contratado.nomeBanda}
+                  onChange={(e) =>
+                    setCurrentContrato({
+                      ...currentContrato,
+                      contratado: { ...currentContrato.contratado, nomeBanda: e.target.value },
+                    })
+                  }
+                  className="border border-teal-500 bg-white p-1 rounded w-72 font-bold text-teal-900 focus:outline-none"
+                />
+              ) : (
+                <span className="font-bold text-teal-900 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                  {currentContrato.contratado.nomeBanda}
+                </span>
+              )}
+              , representada neste ato por{' '}
               <strong>{currentContrato.contratado.representanteNome}</strong>, inscrito no CPF sob nº{' '}
               {currentContrato.contratado.cpfRepresentante}, telefone {currentContrato.contratado.telefone}, e-mail{' '}
               {currentContrato.contratado.email}, com chave PIX para pagamentos:{' '}
-              <span className="font-mono">{currentContrato.contratado.chavePix}</span>.
+              <span className="font-mono font-semibold">{currentContrato.contratado.chavePix}</span>.
             </p>
           </div>
+
 
           <p className="pt-2">
             Têm entre si, justo e contratado, o que se declara mediante as cláusulas e condições seguintes:

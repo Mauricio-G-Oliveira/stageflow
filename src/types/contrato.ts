@@ -1,4 +1,4 @@
-export type ModeloContrato = 'casamento' | 'festa_fechada' | 'corporativo' | 'geral'
+export type ModeloContrato = 'banda_sem_nome' | 'casamento' | 'festa_fechada' | 'corporativo' | 'geral'
 export type StatusContrato = 'rascunho' | 'emitido' | 'assinado'
 
 export interface ClausulaContratual {

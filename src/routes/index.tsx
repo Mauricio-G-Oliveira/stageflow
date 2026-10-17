@@ -4,13 +4,13 @@ import { AuthLayout } from '../layouts/AuthLayout/AuthLayout'
 import { DashboardLayout } from '../layouts/DashboardLayout/DashboardLayout'
 import { LoginPage } from '../pages/Login/LoginPage'
 import { DashboardPage } from '../pages/Dashboard/DashboardPage'
-import { UsuariosPage } from '../pages/Configuracoes/UsuariosPage'
 import { AgendaPage } from '../pages/Agenda/AgendaPage'
 import { EventosPage } from '../pages/Eventos/EventosPage'
-import { BandasPage } from '../pages/Bandas/BandasPage'
 import { MusicosPage } from '../pages/Musicos/MusicosPage'
 import { RepertorioPage } from '../pages/Repertorio/RepertorioPage'
+import { OrcamentosPage } from '../pages/Orcamentos/OrcamentosPage'
 import { ContratosPage } from '../pages/Contratos/ContratosPage'
+import { PressKitPage } from '../pages/PressKit/PressKitPage'
 import { LocadoraPage } from '../pages/Locadora/LocadoraPage'
 import { ConfiguracoesPage } from '../pages/Configuracoes/ConfiguracoesPage'
 
@@ -46,7 +46,7 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
       </Route>
 
-      {/* Protected Dashboard Routes */}
+      {/* Protected Dashboard Routes - Dedicado para UMA banda só */}
       <Route
         element={
           <ProtectedRoute>
@@ -57,12 +57,13 @@ export function AppRoutes() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/agenda" element={<AgendaPage />} />
         <Route path="/eventos" element={<EventosPage />} />
-        <Route path="/bandas" element={<BandasPage />} />
         <Route path="/musicos" element={<MusicosPage />} />
         <Route path="/repertorio" element={<RepertorioPage />} />
+        <Route path="/orcamentos" element={<OrcamentosPage />} />
         <Route path="/contratos" element={<ContratosPage />} />
+        <Route path="/presskit" element={<PressKitPage />} />
+        <Route path="/equipamentos" element={<LocadoraPage />} />
         <Route path="/locadora" element={<LocadoraPage />} />
-        <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/configuracoes" element={<ConfiguracoesPage />} />
       </Route>
 

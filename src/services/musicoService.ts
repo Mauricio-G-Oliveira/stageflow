@@ -1,21 +1,82 @@
 import type { Musico, NovoMusicoPayload } from '../types/musico'
 
-const STORAGE_KEY = 'stageflow_musicos_v2'
+const STORAGE_KEY = 'stageflow_equipe_banda_v3'
 
-// Initial template for a standard 5+ piece band
-const DEFAULT_BAND_MEMBERS: Musico[] = [
+// Formação inicial solicitada: 4 músicos no palco + 1 roadie (5 pessoas total)
+const DEFAULT_EQUIPE: Musico[] = [
   {
     id: 'mus-1',
     nome: 'Mauricio G. Oliveira',
-    instrumentoPrincipal: 'Baixo',
-    instrumentosSecundarios: ['Voz', 'Direção Musical'],
+    categoria: 'musico',
+    instrumentoPrincipal: 'Baixo & Direção Musical',
+    instrumentosSecundarios: ['Backing Vocal', 'Arranjos'],
     tipoVinculo: 'fixo',
     telefone: '(11) 99999-9999',
     email: 'mauriciogoulart.deoliveira37@gmail.com',
     chavePix: 'mauriciogoulart.deoliveira37@gmail.com',
     cachePadrao: 1000,
     status: 'ativo',
-    observacoes: 'Fundador e Direção Musical',
+    observacoes: 'Fundador e Direção da Banda',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'mus-2',
+    nome: 'Cantor(a) / Voz',
+    categoria: 'musico',
+    instrumentoPrincipal: 'Voz Principal & Violão',
+    instrumentosSecundarios: ['Violão'],
+    tipoVinculo: 'fixo',
+    telefone: '(11) 98888-8888',
+    chavePix: 'cantor@exemplo.com',
+    cachePadrao: 1000,
+    status: 'ativo',
+    observacoes: 'Frontman / Vocal',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'mus-3',
+    nome: 'Guitarrista',
+    categoria: 'musico',
+    instrumentoPrincipal: 'Guitarra Solo & Base',
+    instrumentosSecundarios: ['Backing Vocal', 'Pedaleira'],
+    tipoVinculo: 'fixo',
+    telefone: '(11) 97777-7777',
+    chavePix: 'guitarra@exemplo.com',
+    cachePadrao: 1000,
+    status: 'ativo',
+    observacoes: 'Guitarras e solos',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'mus-4',
+    nome: 'Baterista',
+    categoria: 'musico',
+    instrumentoPrincipal: 'Bateria & Percussão',
+    instrumentosSecundarios: ['Click', 'Samplers'],
+    tipoVinculo: 'fixo',
+    telefone: '(11) 96666-6666',
+    chavePix: 'bateria@exemplo.com',
+    cachePadrao: 1000,
+    status: 'ativo',
+    observacoes: 'Bateria e metrônomo/click',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'mus-5',
+    nome: 'Roadie 1 (Apoio de Palco)',
+    categoria: 'tecnico',
+    instrumentoPrincipal: 'Roadie / Apoio de Palco',
+    instrumentosSecundarios: ['Montagem de Cabos', 'Afinação de Instrumentos'],
+    tipoVinculo: 'apoio',
+    telefone: '(11) 95555-5555',
+    chavePix: 'roadie1@exemplo.com',
+    cachePadrao: 350,
+    status: 'ativo',
+    observacoes: 'Responsável pela passagem de cabos, troca de instrumentos e suporte de palco',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -29,17 +90,17 @@ class MusicoService {
         return JSON.parse(data)
       }
     } catch (e) {
-      console.error('Erro ao ler músicos do localStorage:', e)
+      console.error('Erro ao ler equipe do localStorage:', e)
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_BAND_MEMBERS))
-    return DEFAULT_BAND_MEMBERS
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_EQUIPE))
+    return DEFAULT_EQUIPE
   }
 
-  private setStorage(musicos: Musico[]): void {
+  private setStorage(equipe: Musico[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(musicos))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(equipe))
     } catch (e) {
-      console.error('Erro ao salvar músicos no localStorage:', e)
+      console.error('Erro ao salvar equipe no localStorage:', e)
     }
   }
 
@@ -57,11 +118,11 @@ class MusicoService {
     const now = new Date().toISOString()
     const novo: Musico = {
       ...payload,
-      id: `mus-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: `eq-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: now,
       updatedAt: now,
     }
-    const updated = [novo, ...list]
+    const updated = [...list, novo]
     this.setStorage(updated)
     return novo
   }

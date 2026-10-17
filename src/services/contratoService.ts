@@ -1,15 +1,61 @@
 import type { Contrato, ModeloContrato, NovoContratoPayload, ClausulaContratual } from '../types/contrato'
 import type { Evento } from '../types/evento'
+import { bandaConfigService } from './bandaConfigService'
 
-const STORAGE_KEY = 'stageflow_contratos_v1'
+const STORAGE_KEY = 'stageflow_contratos_v2'
 
 export const MODELOS_CLAUSULAS: Record<ModeloContrato, ClausulaContratual[]> = {
+  banda_sem_nome: [
+    {
+      id: 'cl-1',
+      titulo: 'CLÁUSULA 1ª - DO OBJETO E IDENTIFICAÇÃO DA ATRAÇÃO MUSICAL',
+      conteudo:
+        'O presente contrato tem por objeto a realização de apresentação musical ao vivo pela CONTRATADA, grupo musical atualmente sob denominação artística provisória de "[NOME DA BANDA]", representado por sua direção musical, composto por 4 (quatro) músicos no palco e equipe técnica/roadie de suporte, com repertório dinâmico e profissional acordado previamente entre as partes.',
+    },
+    {
+      id: 'cl-2',
+      titulo: 'CLÁUSULA 2ª - DO CRONOGRAMA, MONTAGEM E PASSAGEM DE SOM',
+      conteudo:
+        'A CONTRATADA compromete-se a comparecer ao local do evento com antecedência técnica estipulada para descarga, montagem de sonorização, instrumentos e passagem de som completa, antes do início da chegada dos convidados.',
+    },
+    {
+      id: 'cl-3',
+      titulo: 'CLÁUSULA 3ª - DA ESTRUTURA TÉCNICA E ENERGIA',
+      conteudo:
+        'O CONTRATANTE fornecerá ponto de energia elétrica aterrado e estável (110v/220v) exclusivo para os equipamentos musicais a no máximo 10 metros do palco, além de espaço físico coberto e seguro contra sol e chuva.',
+    },
+    {
+      id: 'cl-4',
+      titulo: 'CLÁUSULA 4ª - DA ALIMENTAÇÃO E CAMARIM',
+      conteudo:
+        'O CONTRATANTE disponibilizará alimentação e bebidas (água mineral, refrigerantes e café) a todos os 4 músicos e equipe técnica de apoio durante o período do evento.',
+    },
+    {
+      id: 'cl-5',
+      titulo: 'CLÁUSULA 5ª - DO VALOR E CONDIÇÕES DE PAGAMENTO',
+      conteudo:
+        'Pela prestação dos serviços artísticos, o CONTRATANTE pagará o valor estipulado em duas parcelas: 50% a título de sinal e garantia irrevogável de reserva de data, e o saldo restante impreterivelmente até a passagem de som no dia do evento.',
+    },
+    {
+      id: 'cl-6',
+      titulo: 'CLÁUSULA 6ª - DA HORA EXTRA E PRORROGAÇÃO',
+      conteudo:
+        'Qualquer prorrogação do horário além do contratado dependerá de comum acordo e implicará na taxa de 30% do valor total do cachê por hora adicional.',
+    },
+    {
+      id: 'cl-7',
+      titulo: 'CLÁUSULA 7ª - DO FORO',
+      conteudo:
+        'Fica eleito o foro da Comarca do local da apresentação para dirimir dúvidas oriundas deste contrato.',
+    },
+  ],
+
   casamento: [
     {
       id: 'cl-1',
       titulo: 'CLÁUSULA 1ª - DO OBJETO E FORMAÇÃO',
       conteudo:
-        'O presente instrumento tem como objeto a prestação de serviços artísticos e musicais para celebração matrimonial, a ser realizada pela CONTRATADA com formação ao vivo composta por músicos profissionais e equipe técnica, executando repertório de alta qualidade previamente alinhado entre as partes.',
+        'O presente instrumento tem como objeto a prestação de serviços artísticos e musicais para celebração matrimonial, a ser realizada pela CONTRATADA com formação ao vivo composta por 4 músicos profissionais e equipe técnica, executando repertório de alta qualidade previamente alinhado entre as partes.',
     },
     {
       id: 'cl-2',
@@ -99,22 +145,22 @@ export const MODELOS_CLAUSULAS: Record<ModeloContrato, ClausulaContratual[]> = {
       id: 'cl-3',
       titulo: 'CLÁUSULA 3ª - DO RIDER TÉCNICO',
       conteudo:
-        'A montagem e passagem de som ocorrerão em conformidade com o cronograma geral da convenção/evento empresarial, com técnicos e roadies credenciados.',
+        'O CONTRATANTE fornecerá a infraestrutura técnica conforme o rider de som e iluminação alinhado previamente pela equipe de produção da BANDA.',
     },
     {
       id: 'cl-4',
       titulo: 'CLÁUSULA 4ª - DO FORO',
       conteudo:
-        'As partes elegem o foro da Comarca do evento para dirimir quaisquer pendências decorrentes do presente contrato.',
+        'Eleito o foro da Comarca do local da prestação do serviço.',
     },
   ],
 
   geral: [
     {
       id: 'cl-1',
-      titulo: 'CLÁUSULA 1ª - DO OBJETO',
+      titulo: 'CLÁUSULA 1ª - DO OBJETO DO CONTRATO',
       conteudo:
-        'Prestação de serviços artísticos musicais ao vivo com músicos e repertório contratados para a data estipulada.',
+        'O presente contrato visa à execução de apresentação musical ao vivo pela BANDA CONTRATADA em favor do CONTRATANTE, na data, horário e local previamente estabelecidos.',
     },
     {
       id: 'cl-2',
@@ -147,7 +193,60 @@ class ContratoService {
     } catch (e) {
       console.error('Erro ao ler contratos do localStorage:', e)
     }
-    return []
+
+    // Contrato modelo inicial pronto para a banda sem nome ainda
+    const bandaConfig = bandaConfigService.getConfig()
+    const defaultContrato: Contrato = {
+      id: 'ctr-demo-1',
+      numeroContrato: `CTR-${new Date().getFullYear()}/001`,
+      modelo: 'banda_sem_nome',
+      status: 'emitido',
+      contratante: {
+        nome: 'Juliana Mendes & Rafael Costa',
+        cpfCnpj: '123.456.789-00',
+        telefone: '(11) 98765-4321',
+        email: 'juliana.mendes@exemplo.com',
+        enderecoCompleto: 'Av. Paulista, 1000 - Bela Vista',
+        cidade: 'São Paulo',
+        estado: 'SP',
+      },
+      contratado: {
+        nomeBanda: bandaConfig.nomeBanda,
+        representanteNome: bandaConfig.responsavelNome,
+        cpfRepresentante: bandaConfig.responsavelCpf,
+        telefone: bandaConfig.responsavelTelefone,
+        email: bandaConfig.responsavelEmail,
+        chavePix: bandaConfig.chavePix,
+      },
+      detalhesShow: {
+        data: '2024-11-23',
+        localNome: 'Espaço Villa Bisutti',
+        enderecoShow: 'Rua Principal, 500 - Vila Olímpia',
+        cidadeShow: 'São Paulo - SP',
+        horarioChegadaMontagem: '17:30',
+        horarioPassagemSom: '19:00',
+        horarioInicioShow: '21:30',
+        duracaoShow: '3 horas de apresentação (2 sets de 1h20)',
+        formacaoBanda: 'Banda completa com 4 músicos no palco + 1 roadie de suporte',
+      },
+      financeiro: {
+        valorTotal: 5500,
+        valorSinal: 2750,
+        dataVencimentoSinal: '2024-11-10',
+        valorRestante: 2750,
+        dataVencimentoRestante: '2024-11-23',
+        formaPagamento: '50% sinal na assinatura via Pix + 50% na passagem de som',
+        chavePix: bandaConfig.chavePix,
+        beneficiarioPix: bandaConfig.responsavelNome,
+      },
+      clausulas: MODELOS_CLAUSULAS.banda_sem_nome,
+      observacoesAdicionais: 'Apresentação com som e iluminação cênica de palco próprios da banda.',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([defaultContrato]))
+    return [defaultContrato]
   }
 
   private setStorage(contratos: Contrato[]): void {
@@ -204,10 +303,11 @@ class ContratoService {
   }
 
   // Gera contrato pré-preenchido a partir dos dados do Evento da Agenda
-  gerarContratoDeEvento(evento: Evento, modelo: ModeloContrato = 'casamento'): NovoContratoPayload {
-    const clausulas = MODELOS_CLAUSULAS[modelo] || MODELOS_CLAUSULAS.casamento
+  gerarContratoDeEvento(evento: Evento, modelo: ModeloContrato = 'banda_sem_nome'): NovoContratoPayload {
+    const clausulas = MODELOS_CLAUSULAS[modelo] || MODELOS_CLAUSULAS.banda_sem_nome
     const valorRestante = Math.max(0, evento.cacheTotal - evento.valorSinal)
-    const numeroGerado = `SF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+    const numeroGerado = `CTR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+    const bandaConfig = bandaConfigService.getConfig()
 
     const duracaoTexto = `${Math.floor(evento.tempoShowMinutos / 60)}h${
       evento.tempoShowMinutos % 60 ? (evento.tempoShowMinutos % 60) + 'min' : ''
@@ -228,12 +328,12 @@ class ContratoService {
         estado: evento.estado,
       },
       contratado: {
-        nomeBanda: 'StageFlow Band (Mauricio G. Oliveira & Banda)',
-        representanteNome: 'Mauricio G. Oliveira',
-        cpfRepresentante: '000.000.000-00',
-        telefone: '(11) 99999-9999',
-        email: 'mauriciogoulart.deoliveira37@gmail.com',
-        chavePix: evento.chavePixPagamento || 'mauriciogoulart.deoliveira37@gmail.com',
+        nomeBanda: bandaConfig.nomeBanda,
+        representanteNome: bandaConfig.responsavelNome,
+        cpfRepresentante: bandaConfig.responsavelCpf,
+        telefone: bandaConfig.responsavelTelefone,
+        email: bandaConfig.responsavelEmail,
+        chavePix: evento.chavePixPagamento || bandaConfig.chavePix,
       },
       detalhesShow: {
         data: evento.data,
@@ -244,7 +344,7 @@ class ContratoService {
         horarioPassagemSom: evento.horarioPassagemSom,
         horarioInicioShow: evento.horarioInicioShow,
         duracaoShow: duracaoTexto,
-        formacaoBanda: `Banda completa (${evento.musicosEscalados.length || 5} músicos)`,
+        formacaoBanda: `Banda completa (4 músicos no palco + 1 roadie de apoio)`,
       },
       financeiro: {
         valorTotal: evento.cacheTotal,
@@ -253,8 +353,8 @@ class ContratoService {
         valorRestante,
         dataVencimentoRestante: evento.data,
         formaPagamento: evento.formaPagamento === 'pix' ? 'Transferência instantânea via PIX' : evento.formaPagamento,
-        chavePix: evento.chavePixPagamento || 'mauriciogoulart.deoliveira37@gmail.com',
-        beneficiarioPix: 'Mauricio G. Oliveira (Direção Musical)',
+        chavePix: evento.chavePixPagamento || bandaConfig.chavePix,
+        beneficiarioPix: `${bandaConfig.responsavelNome} (Direção Musical)`,
       },
       clausulas,
       observacoesAdicionais: evento.observacoes || '',
