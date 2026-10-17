@@ -1,102 +1,185 @@
-# StageFlow — Backend REST API (Java Spring Boot 3 & PostgreSQL)
+<div align="center">
 
-Backend completo para o ecossistema **StageFlow**, desenvolvido em **Java 17 / 21 LTS**, **Spring Boot 3.3.4**, **Spring Data JPA**, **Spring Security**, **JWT** e **PostgreSQL**.
+# ⚙️ StageFlow • Backend RESTful API
+
+**Serviço Backend de Alta Performance em Java 21 LTS & Spring Boot 3 para o Ecossistema StageFlow.**
+
+[![Java 21 LTS](https://img.shields.io/badge/Java-21_LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot 3.3.4](https://img.shields.io/badge/Spring_Boot-3.3.4-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Spring Security & JWT](https://img.shields.io/badge/Security-JWT_Auth-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)](https://jwt.io/)
+[![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Maven](https://img.shields.io/badge/Maven-Build-C71A36?style=for-the-badge&logo=apache-maven&logoColor=white)](https://maven.apache.org/)
+[![License MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](./LICENSE)
+
+<br />
+
+### 🌐 [Repositório Frontend (React 19 PWA)](https://github.com/Mauricio-G-Oliveira/stageflow) • [Live Demo Online](https://mauricio-g-oliveira.github.io/stageflow/)
+
+<br />
+
+</div>
 
 ---
 
-## 🚀 Como abrir e rodar no IntelliJ IDEA
+## 📖 Visão Geral da API
 
-1. Abra o **IntelliJ IDEA**.
-2. Clique em **File > Open** (ou *Open Project*) e selecione esta pasta:
-   ```
-   /Users/mauricio/Desktop/stageflow/backend
-   ```
-3. O IntelliJ detectará automaticamente o arquivo `pom.xml` como projeto Maven e baixará todas as dependências.
-4. Abra o arquivo principal:
-   ```
-   src/main/java/com/stageflow/StageflowApplication.java
-   ```
-5. Clique com o botão direito e selecione **Run 'StageflowApplication'** (ou clique no ícone verde ▶️).
-6. **Pronto!** O backend iniciará na porta `8080`.
-   - Se você ainda não tiver o PostgreSQL instalado localmente, o backend roda automaticamente em memória (**H2**) para você poder testar e debugar imediatamente sem erros de conexão!
+O **StageFlow Backend** é a espinha dorsal de serviços RESTful da plataforma StageFlow. Projetado com padrões de arquitetura corporativa em camadas (*Layered Architecture*), ele fornece persistência robusta, controle de acesso baseado em papéis (RBAC), emissão de tokens JWT e gestão de recursos para bandas, eventos musicais, contratos e inventário patrimonial.
 
 ---
 
-## 🗄️ Conectando com o PostgreSQL na Nuvem (Supabase / Render / Neon - 100% Grátis)
+## 🏛️ Destaques de Arquitetura & Engenharia
 
-Para conectar o backend com o seu banco PostgreSQL gratuito na nuvem, basta definir as variáveis de ambiente no IntelliJ (*Run/Debug Configurations*) ou no seu servidor de hospedagem:
+- **Java 21 LTS & Spring Boot 3.3.4:** Aproveita os recursos modernos da linguagem Java com alta performance e suporte a virtual threads.
+- **Autenticação Stateless com JWT:** Filtro customizado `JwtAuthenticationFilter` interceptando requisições HTTP Bearer com validação criptográfica.
+- **Controle de Acesso RBAC:** Perfis `ADMIN` e `USER` protegendo rotas administrativas e financeiras com granularidade.
+- **Camada de Isolamento com DTOs:** Entidades JPA (`@Entity`) nunca são expostas diretamente na API pública, garantindo desacoplamento e segurança contra *mass assignment*.
+- **Estratégia de Banco de Dados Dual:**
+  - **Desenvolvimento Local:** Suporte a banco em memória (**H2**) para execução instantânea sem necessidade de instalar banco local.
+  - **Staging / Produção:** Conexão nativa com **PostgreSQL** em nuvem (Supabase, Neon, Render ou AWS RDS).
+- **Seed Automatizado (`DatabaseSeeder`):** Inicialização do banco com dados realistas de teste, usuário administrador padrão e estruturas de show pré-configuradas.
+- **Containerização com Docker:** `Dockerfile` pronto para orquestração em contêineres e deploy em plataformas PaaS (Render, Fly.io, Railway, AWS ECS).
 
-```bash
-SPRING_DATASOURCE_URL=jdbc:postgresql://db.seu-projeto.supabase.co:5432/postgres
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=sua-senha-do-banco
-SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
+---
+
+## 📡 Referência dos Endpoints da API REST
+
+Todas as rotas da API estão prefixadas sob `/api/v1`.
+
+### 🔐 1. Autenticação & Gestão de Contas (`/auth`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `POST` | `/api/v1/auth/login` | Pública | Autenticação com e-mail e senha. Retorna Token JWT e dados do perfil. |
+| `POST` | `/api/v1/auth/register` | Pública | Cadastro de novo usuário com período de degustação (*Trial*). |
+| `GET` | `/api/v1/auth/me` | JWT | Retorna informações do usuário atualmente autenticado. |
+
+### 👥 2. Gestão de Usuários & Assinantes (`/usuarios`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `GET` | `/api/v1/usuarios` | `ADMIN` | Listagem completa de usuários e status de plano. |
+| `POST` | `/api/v1/usuarios/{id}/renovar` | `ADMIN` | Renovação manual de período de acesso de usuário. |
+| `PATCH` | `/api/v1/usuarios/{id}/senha` | JWT | Atualização segura de senha. |
+| `DELETE` | `/api/v1/usuarios/{id}` | `ADMIN` | Exclusão de conta de usuário. |
+
+### 📅 3. Eventos, Shows & Cronograma de Palco (`/eventos`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `GET` | `/api/v1/eventos` | JWT | Lista todos os shows e eventos cadastrados com horários e cachê. |
+| `POST` | `/api/v1/eventos` | JWT | Cadastra novo show com detalhes de montagem, passagem de som e local. |
+| `PUT` | `/api/v1/eventos/{id}` | JWT | Atualiza os dados de um evento existente. |
+| `DELETE` | `/api/v1/eventos/{id}` | JWT | Remove um show da agenda. |
+
+### 🎸 4. Músicos & Integrantes (`/musicos`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `GET` | `/api/v1/musicos` | JWT | Lista os músicos da banda, instrumentos, dados de contato e chave PIX. |
+| `POST` | `/api/v1/musicos` | JWT | Cadastra integrante da banda ou suporte técnico. |
+
+### 🎶 5. Repertório & Cifras (`/repertorio`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `GET` | `/api/v1/repertorio` | JWT | Lista as músicas do repertório com tom, BPM e cifras associadas. |
+| `POST` | `/api/v1/repertorio` | JWT | Adiciona nova música e arranjos ao repertório da banda. |
+
+### 📜 6. Contratos de Prestação de Serviços (`/contratos`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `GET` | `/api/v1/contratos` | JWT | Lista todos os contratos gerados para clientes e contratantes. |
+| `POST` | `/api/v1/contratos` | JWT | Emite novo contrato com cláusulas comerciais e valores. |
+
+### 📦 7. Inventário Patrimonial & Locações (`/locadora`)
+| Método | Endpoint | Proteção | Descrição |
+|---|---|---|---|
+| `GET` | `/api/v1/locadora/equipamentos` | JWT | Lista os ativos de som, iluminação e instrumentos cadastrados. |
+| `POST` | `/api/v1/locadora/equipamentos` | JWT | Cadastra novo equipamento no patrimônio da banda. |
+| `GET` | `/api/v1/locadora/locacoes` | JWT | Consulta agenda de locações ou cessões de equipamentos. |
+| `POST` | `/api/v1/locadora/locacoes` | JWT | Registra saída de equipamentos e gera termo de locação. |
+
+---
+
+## 📁 Estrutura de Pacotes
+
+```
+backend/
+├── src/main/java/com/stageflow/
+│   ├── config/            # Configurações de CORS, WebMvc e Segurança
+│   ├── controller/        # Controladores REST da API (@RestController)
+│   ├── data/              # DatabaseSeeder para população inicial de dados
+│   ├── domain/            # Entidades JPA e Enums de domínio
+│   │   ├── entity/        # Contrato, Evento, Musico, Musica, Usuario, Equipamento
+│   │   └── enums/         # Role, StatusEvento, StatusLocacao, PlanType
+│   ├── dto/               # Data Transfer Objects para requests e responses
+│   │   └── auth/          # LoginRequest, RegisterRequest, LoginResponse
+│   ├── repository/        # Repositórios Spring Data JPA (@Repository)
+│   ├── security/          # Provedores JWT, filtros e UserDetailsService
+│   ├── service/           # Camada de lógica de negócios (@Service)
+│   └── StageflowApplication.java # Classe principal do Spring Boot
+├── src/main/resources/
+│   └── application.yml    # Configuração de portas, JWT secret e datasource
+├── Dockerfile             # Multi-stage build para produção
+├── LICENSE                # Licença MIT
+└── pom.xml                # Gerenciador de dependências Maven
 ```
 
 ---
 
-## 🔐 Administrador do Sistema
+## 🛠️ Como Executar Localmente
 
-Ao iniciar a aplicação pela primeira vez, o `DatabaseSeeder` cria automaticamente a conta de Administrador oficial:
+### Pré-requisitos
+- **Java JDK 17 ou 21** instalado
+- **Maven 3.8+** (ou utilize o plugin do IntelliJ IDEA / VS Code)
 
-- **E-mail:** `mauriciogoulart.deoliveira37@gmail.com`
-- **Perfil:** `ADMIN` (Isento e Vitalício)
-- **Credenciais:** Gerenciadas de forma restrita e segura pelo proprietário do sistema.
+### Execução via Linha de Comando (Maven)
 
----
+```bash
+# 1. Entrar na pasta do backend
+cd backend
 
-## 📡 Principais Endpoints da API REST
+# 2. Compilar e empacotar a aplicação
+mvn clean package -DskipTests
 
-### Autenticação & SaaS
-- `POST /api/v1/auth/login`: Autentica com e-mail/senha e retorna token JWT.
-- `POST /api/v1/auth/register`: Cadastra novos usuários/clientes com opção de 30 dias ou 3 dias de teste grátis.
-- `GET /api/v1/auth/me`: Retorna os dados do usuário autenticado.
+# 3. Executar o JAR gerado
+java -jar target/stageflow-backend-0.0.1-SNAPSHOT.jar
+```
 
-### Gestão SaaS de Assinantes & Usuários
-- `GET /api/v1/usuarios`: Lista todos os usuários e status de assinatura (Admin).
-- `POST /api/v1/usuarios/{id}/renovar`: Renova acesso por mais 30 dias após confirmação de pagamento PIX.
-- `PATCH /api/v1/usuarios/{id}/senha`: Altera senha do usuário.
-- `DELETE /api/v1/usuarios/{id}`: Remove usuário.
+A API estará disponível em `http://localhost:8080`.
 
-### Eventos & Shows
-- `GET /api/v1/eventos`: Lista shows e eventos agendados com cronograma de palco e rateio.
-- `POST /api/v1/eventos`: Cadastra novo evento.
-- `PUT /api/v1/eventos/{id}`: Atualiza evento.
-- `DELETE /api/v1/eventos/{id}`: Exclui evento.
+### Execução via Docker
 
-### Músicos da Banda
-- `GET /api/v1/musicos`: Lista músicos, instrumentos, cachês e chaves PIX.
-- `POST /api/v1/musicos`: Cadastra músico.
+```bash
+# Construir a imagem Docker
+docker build -t stageflow-backend .
 
-### Repertório & Partituras
-- `GET /api/v1/repertorio`: Lista músicas, tons, cifras e documentos anexados.
-- `POST /api/v1/repertorio`: Cadastra música com cifras e anotações.
-
-### Contratos
-- `GET /api/v1/contratos`: Lista contratos emitidos para casamentos e festas.
-- `POST /api/v1/contratos`: Emite novo contrato.
-
-### Locadora de Som & Equipamentos
-- `GET /api/v1/locadora/equipamentos`: Inventário de som, iluminação e estruturas.
-- `POST /api/v1/locadora/equipamentos`: Cadastra equipamento no estoque.
-- `GET /api/v1/locadora/locacoes`: Agenda de locações de equipamentos.
-- `POST /api/v1/locadora/locacoes`: Registra locação e emite contrato.
-- `PATCH /api/v1/locadora/locacoes/{id}/status`: Atualiza status da locação.
+# Executar o contêiner
+docker run -p 8080:8080 stageflow-backend
+```
 
 ---
 
-## 📦 Como criar um repositório separado no GitHub para o Backend
+## 🌿 Governança de Branches (Git Flow)
 
-Recomendamos manter o backend em um repositório exclusivo (ex: `stageflow-backend`):
+```
+main (Produção / Release estável)
+  │
+  └── develop (Integração de novas features da API)
+        │
+        └── feature/nome-da-funcionalidade
+```
 
-1. Crie um novo repositório vazio no seu GitHub com o nome `stageflow-backend`.
-2. No seu terminal, entre na pasta `backend`:
-   ```bash
-   cd /Users/mauricio/Desktop/stageflow/backend
-   git init
-   git add .
-   git commit -m "feat: backend inicial spring boot com postgresql e jwt"
-   git branch -M main
-   git remote add origin https://github.com/Mauricio-G-Oliveira/stageflow-backend.git
-   git push -u origin main
-   ```
+- **`main`**: Versões estáveis e testadas.
+- **`develop`**: Linha ativa de desenvolvimento da API.
+- **Tags de Release (SemVer):** Versionamento semântico padronizado (`v1.0.0`).
+
+---
+
+## 👤 Autor
+
+**Maurício G. Oliveira**
+- GitHub: [@Mauricio-G-Oliveira](https://github.com/Mauricio-G-Oliveira)
+- Repositório Frontend: [StageFlow PWA](https://github.com/Mauricio-G-Oliveira/stageflow)
+
+---
+
+## 📄 Licença
+
+Este projeto é distribuído sob a licença **MIT**. Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
