@@ -20,6 +20,7 @@ import { contratoService } from '../../services/contratoService'
 import { eventoService } from '../../services/eventoService'
 import { Button } from '../../components/Button/Button'
 import { VisualizadorContrato } from './VisualizadorContrato'
+import { imprimirComNomeArquivo, formatarDataParaNomeArquivo } from '../../utils/printHelper'
 
 export function ContratosPage() {
   const [contratos, setContratos] = useState<Contrato[]>([])
@@ -343,7 +344,10 @@ export function ContratosPage() {
                     size="sm"
                     onClick={() => {
                       setSelectedContrato(item)
-                      setTimeout(() => window.print(), 300)
+                      const nomeCliente = item.contratante.nome || 'Cliente'
+                      const dataEvento = formatarDataParaNomeArquivo(item.detalhesShow.data)
+                      const nomeSugestao = `Contrato - ${nomeCliente}${dataEvento ? ` - ${dataEvento}` : ''}`
+                      imprimirComNomeArquivo(nomeSugestao, 300)
                     }}
                     leftIcon={<Printer className="w-4 h-4" />}
                   >

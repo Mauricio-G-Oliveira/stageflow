@@ -10,6 +10,11 @@ import {
 } from 'lucide-react'
 import type { Contrato } from '../../types/contrato'
 import { Button } from '../../components/Button/Button'
+import {
+  imprimirComNomeArquivo,
+  formatarDataParaNomeArquivo,
+  sanitizarNomeArquivo,
+} from '../../utils/printHelper'
 
 interface VisualizadorContratoProps {
   contrato: Contrato
@@ -26,14 +31,20 @@ export function VisualizadorContrato({
   const [currentContrato, setCurrentContrato] = useState<Contrato>(contrato)
 
   const handlePrint = () => {
-    window.print()
+    const nomeCliente = currentContrato.contratante.nome || 'Cliente'
+    const dataEvento = formatarDataParaNomeArquivo(currentContrato.detalhesShow.data)
+    const nomeSugestao = `Contrato - ${nomeCliente}${dataEvento ? ` - ${dataEvento}` : ''}`
+    imprimirComNomeArquivo(nomeSugestao)
   }
 
   const handleExportJSON = () => {
+    const nomeCliente = currentContrato.contratante.nome || 'Cliente'
+    const dataEvento = formatarDataParaNomeArquivo(currentContrato.detalhesShow.data)
+    const nomeArquivo = sanitizarNomeArquivo(`Contrato - ${nomeCliente}${dataEvento ? ` - ${dataEvento}` : ''}`)
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(currentContrato, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
-    downloadAnchor.setAttribute('download', `Contrato_${currentContrato.numeroContrato}.json`)
+    downloadAnchor.setAttribute('download', `${nomeArquivo}.json`)
     document.body.appendChild(downloadAnchor)
     downloadAnchor.click()
     downloadAnchor.remove()

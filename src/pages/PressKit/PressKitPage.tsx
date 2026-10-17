@@ -24,6 +24,7 @@ import { pressKitService, type PressKitData, type CanalInputRider } from '../../
 import { bandaConfigService } from '../../services/bandaConfigService'
 import { Button } from '../../components/Button/Button'
 import { Input } from '../../components/Input/Input'
+import { imprimirComNomeArquivo } from '../../utils/printHelper'
 
 function InstagramIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
@@ -108,7 +109,11 @@ export function PressKitPage() {
   }
 
   const handlePrint = () => {
-    window.print()
+    const nomeSugerido =
+      activeTab === 'presskit'
+        ? `Press Kit - ${data.nomeBanda}`
+        : `Rider Tecnico - ${data.nomeBanda}`
+    imprimirComNomeArquivo(nomeSugerido)
   }
 
   const handleOpenEditModal = () => {

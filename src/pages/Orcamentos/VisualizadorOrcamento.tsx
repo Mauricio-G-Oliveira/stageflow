@@ -2,6 +2,7 @@ import { Printer, MessageCircle, ArrowLeft, CheckCircle2, Calendar, MapPin, Cloc
 import type { Orcamento } from '../../types/orcamento'
 import { orcamentoService } from '../../services/orcamentoService'
 import { Button } from '../../components/Button/Button'
+import { imprimirComNomeArquivo, formatarDataParaNomeArquivo } from '../../utils/printHelper'
 
 interface VisualizadorOrcamentoProps {
   orcamento: Orcamento
@@ -10,7 +11,10 @@ interface VisualizadorOrcamentoProps {
 
 export function VisualizadorOrcamento({ orcamento, onBack }: VisualizadorOrcamentoProps) {
   const handlePrint = () => {
-    window.print()
+    const nomeCliente = orcamento.cliente.nome || 'Cliente'
+    const dataEvento = formatarDataParaNomeArquivo(orcamento.cliente.dataEvento)
+    const nomeSugestao = `Orcamento - ${nomeCliente}${dataEvento ? ` - ${dataEvento}` : ''}`
+    imprimirComNomeArquivo(nomeSugestao)
   }
 
   const handleWhatsApp = () => {
