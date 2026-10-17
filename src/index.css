@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
 html.dark {
@@ -12,4 +12,89 @@ html.dark {
 
 html.light {
   color-scheme: light;
+
+  /* Invert Slate scale for clean, elegant, readable light mode */
+  --color-slate-950: #f8fafc; /* Canvas page background (slate-50) */
+  --color-slate-900: #ffffff; /* Card / container / sidebar background (white) */
+  --color-slate-850: #f1f5f9; /* Subtle secondary background */
+  --color-slate-800: #e2e8f0; /* Borders, dividers, outlines (slate-200) */
+  --color-slate-700: #cbd5e1; /* Secondary border/chips (slate-300) */
+  --color-slate-600: #94a3b8; /* Muted accents (slate-400) */
+  --color-slate-500: #64748b; /* Subtle text (slate-500) */
+  --color-slate-400: #475569; /* Secondary labels & captions (slate-600) */
+  --color-slate-300: #334155; /* Body text & icons (slate-700) */
+  --color-slate-200: #1e293b; /* Prominent subtitles & labels (slate-800) */
+  --color-slate-100: #0f172a; /* Headings & high-contrast titles (slate-900) */
+  --color-slate-50: #020617;  /* Maximum contrast text (slate-950) */
 }
+
+/* Light mode adjustments for text-white elements that are headings/text */
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light h4.text-white,
+html.light h5.text-white,
+html.light h6.text-white,
+html.light strong.text-white,
+html.light p.text-white,
+html.light td.text-white,
+html.light th.text-white {
+  color: #0f172a !important;
+}
+
+/* Ensure inputs, textareas and selects are readable in light mode */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light textarea,
+html.light select {
+  color: #0f172a !important;
+  background-color: #ffffff;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Button & interactive hover tweaks in light mode */
+html.light .hover\:text-white:hover {
+  color: #020617 !important;
+}
+
+/* Preserve white text on primary buttons, badges, and colored accents */
+html.light .bg-\[\#0e6f5c\] .text-white,
+html.light .bg-\[\#0e6f5c\].text-white,
+html.light [class*="bg-teal-"] .text-white,
+html.light [class*="bg-teal-"].text-white,
+html.light [class*="bg-emerald-"] .text-white,
+html.light [class*="bg-emerald-"].text-white,
+html.light [class*="bg-red-"] .text-white,
+html.light [class*="bg-red-"].text-white,
+html.light [class*="bg-rose-"] .text-white,
+html.light [class*="bg-rose-"].text-white,
+html.light [class*="bg-blue-"] .text-white,
+html.light [class*="bg-blue-"].text-white,
+html.light [class*="bg-indigo-"] .text-white,
+html.light [class*="bg-indigo-"].text-white,
+html.light [class*="bg-amber-"] .text-white,
+html.light [class*="bg-amber-"].text-white,
+html.light [class*="from-\[#0e6f5c\]"] .text-white,
+html.light [class*="from-\[#0e6f5c\]"].text-white,
+html.light button.bg-\[\#0e6f5c\],
+html.light button[class*="bg-teal-"],
+html.light button[class*="bg-emerald-"],
+html.light button[class*="bg-red-"],
+html.light a.bg-\[\#0e6f5c\] {
+  color: #ffffff !important;
+}
+
+/* Light mode shadow enhancements so cards stand out against the light canvas */
+html.light .shadow-xl,
+html.light .shadow-2xl {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.light .shadow-md,
+html.light .shadow-lg {
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.04) !important;
+}
+
